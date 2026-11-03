@@ -1,0 +1,150 @@
+{
+  "version": "2026-10-31",
+  "note": "Curated coding problem bank for CareerLift AI Phase 2 (Secure Coding Arena). Each problem is SERVER-owned. Hidden test cases are NEVER exposed to the client. concept_ids map into agent/data/concepts.json so a correct solution feeds the shared Phase 0 mastery model. I/O is line-based over stdin/stdout so a single solution shape works across Java, Python and C++.",
+  "io_convention": "Programs read from standard input and write to standard output. Each test case's `stdin` is fed verbatim; the program's stdout is compared to `stdout` after trailing-whitespace normalisation per line.",
+  "problems": [
+    {
+      "id": "P-SUM-TWO",
+      "title": "Sum of Two Numbers",
+      "difficulty": "beginner",
+      "concept_ids": ["C-BIGO-DEF"],
+      "description": "Read two integers and print their sum. This warm-up checks that you can read input, compute a result, and print it in the required format.",
+      "input_format": "A single line containing two space-separated integers a and b.",
+      "output_format": "A single line containing the integer a + b.",
+      "constraints": ["-1000000000 <= a, b <= 1000000000"],
+      "examples": [
+        {"input": "2 3", "output": "5", "explanation": "2 + 3 = 5."},
+        {"input": "-4 10", "output": "6", "explanation": "-4 + 10 = 6."}
+      ],
+      "public_tests": [
+        {"stdin": "2 3\n", "stdout": "5\n"},
+        {"stdin": "-4 10\n", "stdout": "6\n"}
+      ],
+      "hidden_tests": [
+        {"stdin": "0 0\n", "stdout": "0\n"},
+        {"stdin": "1000000000 1000000000\n", "stdout": "2000000000\n"},
+        {"stdin": "-1000000000 -1000000000\n", "stdout": "-2000000000\n"}
+      ],
+      "limits": {"time_ms": 2000, "memory_mb": 256}
+    },
+    {
+      "id": "P-MAX-ARRAY",
+      "title": "Maximum in a List",
+      "difficulty": "beginner",
+      "concept_ids": ["C-BIGO-DEF"],
+      "description": "Given n integers, print the largest one. A single linear pass is enough — this is an O(n) scan.",
+      "input_format": "The first line contains an integer n. The second line contains n space-separated integers.",
+      "output_format": "A single line with the maximum of the n integers.",
+      "constraints": ["1 <= n <= 100000", "-1000000000 <= each value <= 1000000000"],
+      "examples": [
+        {"input": "5\n3 1 9 2 7", "output": "9", "explanation": "9 is the largest of the five values."}
+      ],
+      "public_tests": [
+        {"stdin": "5\n3 1 9 2 7\n", "stdout": "9\n"},
+        {"stdin": "1\n-42\n", "stdout": "-42\n"}
+      ],
+      "hidden_tests": [
+        {"stdin": "3\n-5 -9 -1\n", "stdout": "-1\n"},
+        {"stdin": "4\n7 7 7 7\n", "stdout": "7\n"},
+        {"stdin": "6\n1000000000 -1000000000 0 5 5 999999999\n", "stdout": "1000000000\n"}
+      ],
+      "limits": {"time_ms": 2000, "memory_mb": 256}
+    },
+    {
+      "id": "P-FACTORIAL",
+      "title": "Factorial (Recursion)",
+      "difficulty": "beginner",
+      "concept_ids": ["C-RECURSION-BASE"],
+      "description": "Compute n! = 1 x 2 x ... x n. A natural recursive solution needs a correct base case (0! = 1). The answer fits in a 64-bit signed integer for the given range.",
+      "input_format": "A single line containing an integer n.",
+      "output_format": "A single line with n! .",
+      "constraints": ["0 <= n <= 20"],
+      "examples": [
+        {"input": "5", "output": "120", "explanation": "5! = 120."},
+        {"input": "0", "output": "1", "explanation": "0! = 1 (the base case)."}
+      ],
+      "public_tests": [
+        {"stdin": "5\n", "stdout": "120\n"},
+        {"stdin": "0\n", "stdout": "1\n"}
+      ],
+      "hidden_tests": [
+        {"stdin": "1\n", "stdout": "1\n"},
+        {"stdin": "10\n", "stdout": "3628800\n"},
+        {"stdin": "20\n", "stdout": "2432902008176640000\n"}
+      ],
+      "limits": {"time_ms": 2000, "memory_mb": 256}
+    },
+    {
+      "id": "P-BINARY-SEARCH",
+      "title": "Binary Search",
+      "difficulty": "intermediate",
+      "concept_ids": ["C-BINSEARCH"],
+      "description": "Given a SORTED array of n distinct integers and a target, print the 0-based index of the target, or -1 if it is not present. An O(log n) binary search is expected; the array is already sorted in non-decreasing order.",
+      "input_format": "Line 1: integers n and target. Line 2: n space-separated integers in non-decreasing order.",
+      "output_format": "The 0-based index of target, or -1 if absent.",
+      "constraints": ["1 <= n <= 200000", "the array is sorted non-decreasing", "values fit in 32-bit signed int"],
+      "examples": [
+        {"input": "5 7\n1 3 5 7 9", "output": "3", "explanation": "7 is at index 3."},
+        {"input": "5 4\n1 3 5 7 9", "output": "-1", "explanation": "4 is not in the array."}
+      ],
+      "public_tests": [
+        {"stdin": "5 7\n1 3 5 7 9\n", "stdout": "3\n"},
+        {"stdin": "5 4\n1 3 5 7 9\n", "stdout": "-1\n"}
+      ],
+      "hidden_tests": [
+        {"stdin": "1 1\n1\n", "stdout": "0\n"},
+        {"stdin": "1 2\n1\n", "stdout": "-1\n"},
+        {"stdin": "6 11\n2 4 6 8 10 11\n", "stdout": "5\n"},
+        {"stdin": "6 2\n2 4 6 8 10 11\n", "stdout": "0\n"}
+      ],
+      "limits": {"time_ms": 2000, "memory_mb": 256}
+    },
+    {
+      "id": "P-TWO-SUM-COUNT",
+      "title": "Count Pairs With Given Sum",
+      "difficulty": "intermediate",
+      "concept_ids": ["C-HASH-AVG"],
+      "description": "Given n integers and a target k, count the number of unordered index pairs (i, j), i < j, whose values sum to k. A hash map gives an average O(n) solution; a naive O(n^2) double loop may exceed the time limit on the largest hidden cases.",
+      "input_format": "Line 1: integers n and k. Line 2: n space-separated integers.",
+      "output_format": "A single line with the number of valid pairs.",
+      "constraints": ["1 <= n <= 100000", "-1000000000 <= each value, k <= 1000000000"],
+      "examples": [
+        {"input": "4 6\n1 5 3 3", "output": "2", "explanation": "Pairs (1,5) and (3,3) both sum to 6."}
+      ],
+      "public_tests": [
+        {"stdin": "4 6\n1 5 3 3\n", "stdout": "2\n"},
+        {"stdin": "3 10\n1 2 3\n", "stdout": "0\n"}
+      ],
+      "hidden_tests": [
+        {"stdin": "5 0\n-2 2 -2 2 0\n", "stdout": "4\n"},
+        {"stdin": "1 5\n5\n", "stdout": "0\n"},
+        {"stdin": "6 8\n4 4 4 4 0 8\n", "stdout": "8\n"}
+      ],
+      "limits": {"time_ms": 2000, "memory_mb": 256}
+    },
+    {
+      "id": "P-MERGE-INTERVALS",
+      "title": "Merge Overlapping Intervals",
+      "difficulty": "advanced",
+      "concept_ids": ["C-BIGO-WORSTCASE", "C-BIGO-DEF"],
+      "description": "Given n closed intervals, merge all overlapping (or touching) intervals and print the result sorted by start. The expected approach sorts by start (O(n log n)) then sweeps once; its worst case is dominated by the sort, not the sweep.",
+      "input_format": "Line 1: integer n. Each of the next n lines: two integers l r (l <= r).",
+      "output_format": "The merged intervals, one per line as `l r`, sorted by start.",
+      "constraints": ["1 <= n <= 100000", "-1000000000 <= l <= r <= 1000000000", "intervals that merely touch (e.g. [1 2] and [2 3]) are merged"],
+      "examples": [
+        {"input": "4\n1 3\n2 6\n8 10\n15 18", "output": "1 6\n8 10\n15 18", "explanation": "[1 3] and [2 6] overlap into [1 6]."}
+      ],
+      "public_tests": [
+        {"stdin": "4\n1 3\n2 6\n8 10\n15 18\n", "stdout": "1 6\n8 10\n15 18\n"},
+        {"stdin": "2\n1 4\n4 5\n", "stdout": "1 5\n"}
+      ],
+      "hidden_tests": [
+        {"stdin": "1\n5 5\n", "stdout": "5 5\n"},
+        {"stdin": "3\n3 4\n1 2\n2 3\n", "stdout": "1 4\n"},
+        {"stdin": "3\n1 10\n2 3\n4 5\n", "stdout": "1 10\n"},
+        {"stdin": "4\n1 2\n3 4\n5 6\n7 8\n", "stdout": "1 2\n3 4\n5 6\n7 8\n"}
+      ],
+      "limits": {"time_ms": 3000, "memory_mb": 256}
+    }
+  ]
+}

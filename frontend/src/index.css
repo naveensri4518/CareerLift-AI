@@ -1,0 +1,90 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: #07060d;
+  color: #e5e7f0;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* thin, dark scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #272443 transparent;
+}
+*::-webkit-scrollbar { width: 10px; height: 10px; }
+*::-webkit-scrollbar-thumb { background: #272443; border-radius: 999px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-white/5 bg-ink-850/80 backdrop-blur-sm shadow-card;
+  }
+  .card-glow {
+    @apply rounded-2xl border border-brand-purple/20 bg-ink-850/80 shadow-glow;
+  }
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold
+           transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-violet/70
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-brand-gradient text-white hover:brightness-110 shadow-[0_8px_24px_-10px_rgba(99,102,241,0.8)];
+  }
+  .btn-ghost {
+    @apply btn border border-white/10 bg-white/5 text-slate-200 hover:bg-white/10;
+  }
+  .input {
+    @apply w-full rounded-xl border border-white/10 bg-ink-900/80 px-3.5 py-2.5 text-sm text-slate-100
+           placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-violet/60 focus:border-transparent;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium;
+  }
+  .nav-link {
+    @apply flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-medium text-slate-400
+           transition-colors hover:text-slate-100 hover:bg-white/5;
+  }
+  .nav-link-active {
+    @apply text-white bg-brand-soft border border-brand-purple/30;
+  }
+  .section-title {
+    @apply text-sm font-semibold text-slate-200;
+  }
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #a78bfa, #6366f1 55%, #3b82f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Subtle dotted-grid texture for the app shell background (Vercel-style). */
+.dotted-grid {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+  background-size: 22px 22px;
+  background-position: -11px -11px;
+}
+
+@layer components {
+  /* Premium metric tile used in the dashboard stat row. Honest values only. */
+  .stat-card {
+    @apply relative overflow-hidden rounded-2xl border border-white/5 bg-ink-850/80 p-4 shadow-card
+           transition-all duration-200 hover:border-white/10 hover:-translate-y-0.5;
+  }
+  .stat-icon {
+    @apply grid h-10 w-10 shrink-0 place-items-center rounded-xl;
+  }
+}

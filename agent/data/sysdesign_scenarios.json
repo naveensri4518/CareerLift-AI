@@ -1,0 +1,338 @@
+{
+  "version": "2026-10-31",
+  "note": "Phase 4 System Design scenario bank. SERVER-OWNED. The `rubric` block (required components/connections, expected decision options, weights, canonical trade-offs) and per-item `explanation`/`feedback` are NEVER sent to the client before submission — see agent/sysdesign_bank.py public views. Decision prompts use stable option ids; grading compares the student's chosen set to the rubric's `expected`/`acceptable` set deterministically. `palette` lists allowed component ids; connections reference these ids. concept_ids map into agent/data/sysdesign_concepts.json.",
+  "component_catalog": [
+    {"id": "client", "label": "Client / Browser"},
+    {"id": "dns", "label": "DNS"},
+    {"id": "cdn", "label": "CDN"},
+    {"id": "lb", "label": "Load Balancer"},
+    {"id": "api_gateway", "label": "API Gateway"},
+    {"id": "app_server", "label": "Application Server"},
+    {"id": "cache", "label": "Cache (e.g. Redis)"},
+    {"id": "sql_db", "label": "SQL Database"},
+    {"id": "nosql_db", "label": "NoSQL Database"},
+    {"id": "object_store", "label": "Object Storage (e.g. S3)"},
+    {"id": "message_queue", "label": "Message Queue"},
+    {"id": "worker", "label": "Async Worker"},
+    {"id": "search_index", "label": "Search Index"},
+    {"id": "id_generator", "label": "ID Generator Service"}
+  ],
+  "scenarios": [
+    {
+      "id": "SD-URL-SHORTENER",
+      "title": "Design a URL Shortener",
+      "difficulty": "beginner",
+      "prompt": "Design a service like bit.ly that turns a long URL into a short code and redirects short codes back to the original URL. Optimize for very high read volume (redirects) relative to writes (new short links).",
+      "functional_requirements": [
+        "Create a short code for a given long URL",
+        "Redirect a short code to its original URL",
+        "Short codes must be unique"
+      ],
+      "nonfunctional_requirements": [
+        "Reads vastly outnumber writes",
+        "Redirects must be low-latency",
+        "Highly available"
+      ],
+      "palette": ["client", "dns", "lb", "app_server", "cache", "sql_db", "nosql_db", "id_generator", "api_gateway"],
+      "decision_prompts": [
+        {"id": "datastore", "type": "single", "concept_id": "SD-DATA-STORE", "prompt": "Primary datastore for code -> URL mapping?",
+         "options": [{"id": "sql", "text": "Relational (SQL) with an index on the short code"},
+                     {"id": "kv", "text": "Key-value / NoSQL store keyed by short code"},
+                     {"id": "file", "text": "Flat files on disk"},
+                     {"id": "inmem_only", "text": "In-memory only, no persistence"}]},
+        {"id": "code_gen", "type": "single", "concept_id": "SD-COMPONENTS", "prompt": "How to generate unique short codes?",
+         "options": [{"id": "counter_base62", "text": "Monotonic ID generator encoded in base62"},
+                     {"id": "random_retry", "text": "Random code with collision check + retry"},
+                     {"id": "user_choice", "text": "Let users type any code, first-come"},
+                     {"id": "timestamp", "text": "Use the current timestamp as the code"}]},
+        {"id": "read_scaling", "type": "multi", "concept_id": "SD-SCALE-CACHE", "prompt": "How to serve high read (redirect) volume? (Select all that apply)",
+         "options": [{"id": "cache", "text": "Cache hot mappings in memory"},
+                     {"id": "read_replicas", "text": "Add read replicas of the datastore"},
+                     {"id": "single_db", "text": "Send all reads to one primary DB"},
+                     {"id": "no_index", "text": "Drop the index to speed up writes"}]},
+        {"id": "tradeoffs", "type": "multi", "concept_id": "SD-TRADEOFF", "prompt": "Which trade-offs apply to this design? (Select all that apply)",
+         "options": [{"id": "kv_fast_reads", "text": "A KV store gives O(1) lookups but weaker ad-hoc querying"},
+                     {"id": "cache_staleness", "text": "Caching adds a staleness/invalidation concern"},
+                     {"id": "strong_txn_needed", "text": "This workload needs multi-row ACID transactions"},
+                     {"id": "sql_joins_needed", "text": "Complex JOINs are central to the redirect path"}]}
+      ],
+      "rubric": {
+        "required_components": ["app_server", "cache"],
+        "recommended_components": ["lb", "id_generator"],
+        "datastore_acceptable": ["sql", "kv"],
+        "required_connections": [["app_server", "cache"]],
+        "recommended_connections": [["lb", "app_server"], ["app_server", "sql_db"], ["app_server", "nosql_db"]],
+        "decisions": {
+          "datastore": {"acceptable": ["sql", "kv"]},
+          "code_gen": {"acceptable": ["counter_base62", "random_retry"]},
+          "read_scaling": {"expected": ["cache", "read_replicas"]},
+          "tradeoffs": {"expected": ["kv_fast_reads", "cache_staleness"]}
+        },
+        "concept_dimension": {
+          "components": "SD-COMPONENTS", "connections": "SD-CONNECTIONS", "data": "SD-DATA-STORE",
+          "scalability": "SD-SCALE-CACHE", "tradeoffs": "SD-TRADEOFF"
+        }
+      },
+      "feedback": {
+        "components": "A redirect service needs an app tier plus a cache for the hot short-code lookups.",
+        "connections": "The app server should read through the cache before hitting the datastore.",
+        "data": "Either a KV store keyed by code or a SQL table with an index on the code works; both give fast point lookups.",
+        "scalability": "Cache hot mappings and add read replicas — reads dominate this workload.",
+        "tradeoffs": "KV gives fast lookups at the cost of ad-hoc querying; caching introduces invalidation concerns."
+      }
+    },
+    {
+      "id": "SD-NEWS-FEED",
+      "title": "Design a News Feed",
+      "difficulty": "advanced",
+      "prompt": "Design a social news feed that shows each user a timeline of posts from accounts they follow. Handle users with very large follower counts and keep feed loads fast.",
+      "functional_requirements": [
+        "Users can post content",
+        "Users can follow other users",
+        "A user can load a timeline of recent posts from followed accounts"
+      ],
+      "nonfunctional_requirements": [
+        "Feed reads must be fast",
+        "Handle celebrity accounts with millions of followers",
+        "Scale write and read paths independently"
+      ],
+      "palette": ["client", "cdn", "lb", "api_gateway", "app_server", "cache", "sql_db", "nosql_db", "object_store", "message_queue", "worker", "search_index"],
+      "decision_prompts": [
+        {"id": "fanout", "type": "single", "concept_id": "SD-SCALE-ASYNC", "prompt": "How should the feed be assembled?",
+         "options": [{"id": "fanout_write", "text": "Fan-out on write (push to each follower's feed via workers)"},
+                     {"id": "fanout_read", "text": "Fan-out on read (pull + merge followed users' posts at read time)"},
+                     {"id": "hybrid", "text": "Hybrid: fan-out on write, but pull for celebrity accounts"},
+                     {"id": "single_table", "text": "One global posts table scanned per request"}]},
+        {"id": "media", "type": "single", "concept_id": "SD-DATA-STORE", "prompt": "Where to store post media (images/video)?",
+         "options": [{"id": "object_store_cdn", "text": "Object storage fronted by a CDN"},
+                     {"id": "in_db", "text": "As BLOBs inside the primary database"},
+                     {"id": "app_disk", "text": "On each app server's local disk"},
+                     {"id": "cache_only", "text": "Only in the cache"}]},
+        {"id": "scaling", "type": "multi", "concept_id": "SD-SCALE-LB", "prompt": "Which scaling techniques fit this system? (Select all that apply)",
+         "options": [{"id": "lb", "text": "Load balance stateless app servers horizontally"},
+                     {"id": "cache_feeds", "text": "Cache assembled feeds"},
+                     {"id": "queue_fanout", "text": "Use a queue + workers for write fan-out"},
+                     {"id": "one_big_server", "text": "Vertically scale a single large server only"}]},
+        {"id": "tradeoffs", "type": "multi", "concept_id": "SD-TRADEOFF", "prompt": "Which trade-offs apply? (Select all that apply)",
+         "options": [{"id": "write_amp", "text": "Fan-out on write amplifies writes for high-follower accounts"},
+                     {"id": "read_latency", "text": "Fan-out on read shifts cost to read-time latency"},
+                     {"id": "eventual", "text": "Feeds can tolerate eventual consistency"},
+                     {"id": "strong_consistency", "text": "Every follower must see new posts synchronously"}]}
+      ],
+      "rubric": {
+        "required_components": ["app_server", "cache", "message_queue", "worker"],
+        "recommended_components": ["lb", "object_store", "cdn", "nosql_db"],
+        "datastore_acceptable": ["object_store_cdn"],
+        "required_connections": [["app_server", "message_queue"], ["message_queue", "worker"]],
+        "recommended_connections": [["lb", "app_server"], ["app_server", "cache"], ["worker", "nosql_db"]],
+        "decisions": {
+          "fanout": {"acceptable": ["fanout_write", "hybrid"]},
+          "media": {"acceptable": ["object_store_cdn"]},
+          "scaling": {"expected": ["lb", "cache_feeds", "queue_fanout"]},
+          "tradeoffs": {"expected": ["write_amp", "read_latency", "eventual"]}
+        },
+        "concept_dimension": {
+          "components": "SD-COMPONENTS", "connections": "SD-CONNECTIONS", "data": "SD-DATA-STORE",
+          "scalability": "SD-SCALE-ASYNC", "tradeoffs": "SD-TRADEOFF"
+        }
+      },
+      "feedback": {
+        "components": "A scalable feed needs async workers and a queue for fan-out plus a cache for assembled feeds.",
+        "connections": "App servers enqueue fan-out work; workers consume the queue and write to per-user feed stores.",
+        "data": "Store media in object storage behind a CDN, not in the primary DB.",
+        "scalability": "Load-balance stateless app servers, cache feeds, and fan out via a queue + workers.",
+        "tradeoffs": "Write fan-out amplifies writes for celebrities; read fan-out shifts cost to read time; feeds tolerate eventual consistency."
+      }
+    },
+    {
+      "id": "SD-RATE-LIMITER",
+      "title": "Design a Rate Limiter",
+      "difficulty": "intermediate",
+      "prompt": "Design a distributed rate limiter that caps how many requests a client (by API key) may make per time window, enforced consistently across many application servers.",
+      "functional_requirements": [
+        "Allow or reject a request based on a per-client quota",
+        "Enforce the limit across all app servers",
+        "Support a configurable window (e.g. 100 req/min)"
+      ],
+      "nonfunctional_requirements": [
+        "Very low added latency per request",
+        "Consistent counting across servers",
+        "Fail gracefully if the limiter backend is briefly unavailable"
+      ],
+      "palette": ["client", "lb", "api_gateway", "app_server", "cache", "sql_db", "nosql_db"],
+      "decision_prompts": [
+        {"id": "counter_store", "type": "single", "concept_id": "SD-DATA-STORE", "prompt": "Where to keep the per-client counters?",
+         "options": [{"id": "shared_cache", "text": "A shared in-memory store (e.g. Redis) with atomic increments"},
+                     {"id": "local_mem", "text": "Each app server's local memory"},
+                     {"id": "sql_row", "text": "A SQL row updated per request"},
+                     {"id": "logfile", "text": "Append to a log file and count periodically"}]},
+        {"id": "algorithm", "type": "single", "concept_id": "SD-COMPONENTS", "prompt": "Which rate-limiting algorithm?",
+         "options": [{"id": "token_bucket", "text": "Token bucket / sliding window"},
+                     {"id": "random_drop", "text": "Randomly drop a fraction of requests"},
+                     {"id": "block_all", "text": "Block everything once any limit is near"},
+                     {"id": "no_algorithm", "text": "No algorithm; rely on client honesty"}]},
+        {"id": "placement", "type": "multi", "concept_id": "SD-API-GATEWAY", "prompt": "Where can the limiter be enforced? (Select all that apply)",
+         "options": [{"id": "gateway", "text": "At the API gateway / edge"},
+                     {"id": "middleware", "text": "As middleware in each app server"},
+                     {"id": "db_trigger", "text": "As a database trigger on every table"},
+                     {"id": "client_only", "text": "Only in the client, trusting it not to cheat"}]},
+        {"id": "tradeoffs", "type": "multi", "concept_id": "SD-TRADEOFF", "prompt": "Which trade-offs apply? (Select all that apply)",
+         "options": [{"id": "shared_latency", "text": "A shared counter adds a network hop but gives global accuracy"},
+                     {"id": "local_drift", "text": "Local counters are fast but drift / over-admit across servers"},
+                     {"id": "failopen", "text": "You must decide fail-open vs fail-closed when the store is down"},
+                     {"id": "sql_scales", "text": "A per-request SQL update scales effortlessly to any load"}]}
+      ],
+      "rubric": {
+        "required_components": ["app_server", "cache"],
+        "recommended_components": ["api_gateway", "lb"],
+        "datastore_acceptable": ["shared_cache"],
+        "required_connections": [["app_server", "cache"]],
+        "recommended_connections": [["api_gateway", "app_server"], ["lb", "app_server"]],
+        "decisions": {
+          "counter_store": {"acceptable": ["shared_cache"]},
+          "algorithm": {"acceptable": ["token_bucket"]},
+          "placement": {"expected": ["gateway", "middleware"]},
+          "tradeoffs": {"expected": ["shared_latency", "local_drift", "failopen"]}
+        },
+        "concept_dimension": {
+          "components": "SD-COMPONENTS", "connections": "SD-CONNECTIONS", "data": "SD-DATA-STORE",
+          "scalability": "SD-API-GATEWAY", "tradeoffs": "SD-TRADEOFF"
+        }
+      },
+      "feedback": {
+        "components": "Use an app tier plus a shared fast counter store for cross-server accuracy.",
+        "connections": "Each app server (or the gateway) increments the shared counter atomically.",
+        "data": "A shared in-memory store with atomic increments is the standard choice; local memory drifts.",
+        "scalability": "Enforce at the gateway and/or app middleware; a token bucket / sliding window is typical.",
+        "tradeoffs": "A shared counter trades a hop for accuracy; local counters over-admit; decide fail-open vs fail-closed."
+      }
+    },
+    {
+      "id": "SD-CHAT",
+      "title": "Design a Chat System",
+      "difficulty": "advanced",
+      "prompt": "Design a 1:1 and group messaging system that delivers messages in near-real-time, stores history, and works when recipients are offline.",
+      "functional_requirements": [
+        "Send and receive messages in near-real-time",
+        "Persist message history",
+        "Deliver messages to offline users when they reconnect"
+      ],
+      "nonfunctional_requirements": [
+        "Low delivery latency for online users",
+        "Durable message storage",
+        "Scale to many concurrent connections"
+      ],
+      "palette": ["client", "lb", "api_gateway", "app_server", "cache", "sql_db", "nosql_db", "message_queue", "worker", "object_store"],
+      "decision_prompts": [
+        {"id": "transport", "type": "single", "concept_id": "SD-API-STYLE", "prompt": "How should online clients receive messages?",
+         "options": [{"id": "websocket", "text": "Persistent connections (WebSocket) with a connection/presence layer"},
+                     {"id": "poll_1s", "text": "HTTP polling every second"},
+                     {"id": "email", "text": "Deliver each message by email"},
+                     {"id": "refresh", "text": "User manually refreshes the page"}]},
+        {"id": "history_store", "type": "single", "concept_id": "SD-DATA-STORE", "prompt": "Where to store message history?",
+         "options": [{"id": "nosql_scaled", "text": "A horizontally-partitioned store keyed by conversation"},
+                     {"id": "single_sql", "text": "One unpartitioned SQL table for all messages forever"},
+                     {"id": "cache_only", "text": "Only in the cache"},
+                     {"id": "client_only", "text": "Only on each client device"}]},
+        {"id": "offline", "type": "multi", "concept_id": "SD-SCALE-ASYNC", "prompt": "How to handle offline delivery? (Select all that apply)",
+         "options": [{"id": "queue", "text": "Queue undelivered messages for later"},
+                     {"id": "push", "text": "Send a push notification"},
+                     {"id": "drop", "text": "Drop messages for offline users"},
+                     {"id": "block_sender", "text": "Block the sender until the recipient is online"}]},
+        {"id": "tradeoffs", "type": "multi", "concept_id": "SD-TRADEOFF", "prompt": "Which trade-offs apply? (Select all that apply)",
+         "options": [{"id": "conn_state", "text": "Persistent connections hold server state and need a presence/routing layer"},
+                     {"id": "partition_order", "text": "Partitioning by conversation keeps per-conversation ordering simple"},
+                     {"id": "poll_waste", "text": "Frequent polling wastes resources and adds latency vs push"},
+                     {"id": "sql_infinite", "text": "A single SQL table scales to unlimited message volume"}]}
+      ],
+      "rubric": {
+        "required_components": ["app_server", "message_queue"],
+        "recommended_components": ["lb", "cache", "nosql_db", "worker"],
+        "datastore_acceptable": ["nosql_scaled"],
+        "required_connections": [["app_server", "message_queue"]],
+        "recommended_connections": [["lb", "app_server"], ["app_server", "nosql_db"], ["message_queue", "worker"]],
+        "decisions": {
+          "transport": {"acceptable": ["websocket"]},
+          "history_store": {"acceptable": ["nosql_scaled"]},
+          "offline": {"expected": ["queue", "push"]},
+          "tradeoffs": {"expected": ["conn_state", "partition_order", "poll_waste"]}
+        },
+        "concept_dimension": {
+          "components": "SD-COMPONENTS", "connections": "SD-CONNECTIONS", "data": "SD-DATA-STORE",
+          "scalability": "SD-SCALE-ASYNC", "tradeoffs": "SD-TRADEOFF"
+        }
+      },
+      "feedback": {
+        "components": "Near-real-time chat needs a connection layer, a queue for offline delivery, and a partitioned history store.",
+        "connections": "App servers publish to a queue; workers persist and push to offline recipients.",
+        "data": "Partition message history by conversation; a single unpartitioned SQL table won't scale.",
+        "scalability": "Queue undelivered messages and use push notifications for offline users.",
+        "tradeoffs": "Persistent connections need presence/routing; conversation partitioning preserves ordering; polling is wasteful vs push."
+      }
+    },
+    {
+      "id": "SD-IMAGE-UPLOAD",
+      "title": "Design an Image Upload Service",
+      "difficulty": "intermediate",
+      "prompt": "Design a service where users upload images, which are stored durably, processed into thumbnails, and served quickly worldwide.",
+      "functional_requirements": [
+        "Accept image uploads",
+        "Store originals durably",
+        "Generate thumbnails / resized variants",
+        "Serve images fast to a global audience"
+      ],
+      "nonfunctional_requirements": [
+        "Durable storage of originals",
+        "Low-latency global delivery",
+        "Processing must not block the upload response"
+      ],
+      "palette": ["client", "cdn", "lb", "api_gateway", "app_server", "cache", "sql_db", "object_store", "message_queue", "worker"],
+      "decision_prompts": [
+        {"id": "storage", "type": "single", "concept_id": "SD-DATA-STORE", "prompt": "Where to store the image files?",
+         "options": [{"id": "object_store", "text": "Object storage (durable, cheap, scalable)"},
+                     {"id": "sql_blob", "text": "As BLOBs in a relational database"},
+                     {"id": "app_disk", "text": "On the app server's local disk"},
+                     {"id": "cache", "text": "In the cache only"}]},
+        {"id": "processing", "type": "single", "concept_id": "SD-SCALE-ASYNC", "prompt": "How to generate thumbnails?",
+         "options": [{"id": "async_worker", "text": "Enqueue a job; a worker processes it asynchronously"},
+                     {"id": "inline", "text": "Resize inline during the upload request"},
+                     {"id": "on_read", "text": "Resize on every read request, every time"},
+                     {"id": "manual", "text": "Have an admin resize images by hand"}]},
+        {"id": "delivery", "type": "multi", "concept_id": "SD-SCALE-CACHE", "prompt": "How to serve images fast globally? (Select all that apply)",
+         "options": [{"id": "cdn", "text": "Serve via a CDN"},
+                     {"id": "cache_meta", "text": "Cache image metadata"},
+                     {"id": "app_serve", "text": "Stream every image through the app servers each time"},
+                     {"id": "no_cache", "text": "Disable all caching for freshness"}]},
+        {"id": "tradeoffs", "type": "multi", "concept_id": "SD-TRADEOFF", "prompt": "Which trade-offs apply? (Select all that apply)",
+         "options": [{"id": "async_latency", "text": "Async processing makes uploads fast but thumbnails appear after a delay"},
+                     {"id": "object_vs_blob", "text": "Object storage scales far better than DB BLOBs for large files"},
+                     {"id": "cdn_cost", "text": "A CDN improves latency but adds cost and cache-invalidation concerns"},
+                     {"id": "disk_scales", "text": "Local app-server disk is a durable, scalable choice"}]}
+      ],
+      "rubric": {
+        "required_components": ["app_server", "object_store", "message_queue", "worker"],
+        "recommended_components": ["cdn", "lb", "cache"],
+        "datastore_acceptable": ["object_store"],
+        "required_connections": [["app_server", "object_store"], ["app_server", "message_queue"], ["message_queue", "worker"]],
+        "recommended_connections": [["cdn", "object_store"], ["lb", "app_server"]],
+        "decisions": {
+          "storage": {"acceptable": ["object_store"]},
+          "processing": {"acceptable": ["async_worker"]},
+          "delivery": {"expected": ["cdn", "cache_meta"]},
+          "tradeoffs": {"expected": ["async_latency", "object_vs_blob", "cdn_cost"]}
+        },
+        "concept_dimension": {
+          "components": "SD-COMPONENTS", "connections": "SD-CONNECTIONS", "data": "SD-DATA-STORE",
+          "scalability": "SD-SCALE-CACHE", "tradeoffs": "SD-TRADEOFF"
+        }
+      },
+      "feedback": {
+        "components": "Store originals in object storage; process thumbnails with a queue + workers so uploads stay fast.",
+        "connections": "The app writes the original to object storage and enqueues a processing job for a worker.",
+        "data": "Object storage is the right home for large files, not DB BLOBs or local disk.",
+        "scalability": "Serve through a CDN and cache metadata; don't stream every image through the app tier.",
+        "tradeoffs": "Async processing delays thumbnails; object storage beats BLOBs; a CDN adds cost and invalidation concerns."
+      }
+    }
+  ]
+}

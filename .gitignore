@@ -1,0 +1,23 @@
+.venv/
+__pycache__/
+results/_raw/
+*.webm
+# CareerLift AI local runtime artifacts
+careerlift.db
+*.db
+results/sessions/
+.pytest_cache/
+
+# --- Added at production-readiness checkpoint (defense-in-depth) ---
+.venv-win/
+frontend/dist/
+frontend/node_modules/
+# AWS / SSO caches and any local secrets must never be committed
+.aws/
+*.pem
+*.key
+.env
+.env.*
+!*.env.example
+# Strands-ship local kit staging (if any ends up under the repo)
+ship_kit/_staging/

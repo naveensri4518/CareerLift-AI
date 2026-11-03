@@ -1,0 +1,62 @@
+{
+  "version": "2026-10-31",
+  "note": "Phase 3 — Technical Assessment concept taxonomy. SEPARATE from agent/data/concepts.json (the FairScore taxonomy) so Phase 3 never alters the measured FairScore surface. Assessment SkillSignals validate against the UNION of these ids and the FairScore ids, then flow through the SAME Phase 0 learner_model. Each id maps to one assessment category/topic. Ids are stable; adding is safe, renaming is not (it orphans past signals).",
+  "concepts": [
+    {"id": "A-DSA-ARRAYS", "category": "dsa", "name": "Arrays & strings"},
+    {"id": "A-DSA-LINKEDLIST", "category": "dsa", "name": "Linked lists"},
+    {"id": "A-DSA-STACKQUEUE", "category": "dsa", "name": "Stacks & queues"},
+    {"id": "A-DSA-TREES", "category": "dsa", "name": "Trees & BSTs"},
+    {"id": "A-DSA-GRAPHS", "category": "dsa", "name": "Graphs & traversal"},
+    {"id": "A-DSA-SORTING", "category": "dsa", "name": "Sorting algorithms"},
+    {"id": "A-DSA-COMPLEXITY", "category": "dsa", "name": "Time & space complexity"},
+
+    {"id": "A-JAVA-BASICS", "category": "java", "name": "Java language basics"},
+    {"id": "A-JAVA-OOP", "category": "java", "name": "Java OOP & classes"},
+    {"id": "A-JAVA-COLLECTIONS", "category": "java", "name": "Java collections"},
+    {"id": "A-JAVA-EXCEPTIONS", "category": "java", "name": "Java exceptions & memory"},
+
+    {"id": "A-PY-BASICS", "category": "python", "name": "Python basics & types"},
+    {"id": "A-PY-DATASTRUCT", "category": "python", "name": "Python data structures"},
+    {"id": "A-PY-FUNCTIONS", "category": "python", "name": "Python functions & scope"},
+    {"id": "A-PY-PITFALLS", "category": "python", "name": "Python gotchas"},
+
+    {"id": "A-C-BASICS", "category": "c", "name": "C language basics"},
+    {"id": "A-C-POINTERS", "category": "c", "name": "C pointers & memory"},
+    {"id": "A-C-STORAGE", "category": "c", "name": "C storage & preprocessor"},
+
+    {"id": "A-CPP-BASICS", "category": "cpp", "name": "C++ basics"},
+    {"id": "A-CPP-OOP", "category": "cpp", "name": "C++ OOP & templates"},
+    {"id": "A-CPP-STL", "category": "cpp", "name": "C++ STL & memory"},
+
+    {"id": "A-DBMS-MODEL", "category": "dbms", "name": "Data models & keys"},
+    {"id": "A-DBMS-NORMAL", "category": "dbms", "name": "Normalization"},
+    {"id": "A-DBMS-TXN", "category": "dbms", "name": "Transactions & ACID"},
+    {"id": "A-DBMS-INDEX", "category": "dbms", "name": "Indexing & storage"},
+
+    {"id": "A-SQL-QUERY", "category": "sql", "name": "SQL queries & joins"},
+    {"id": "A-SQL-AGG", "category": "sql", "name": "SQL aggregation & grouping"},
+    {"id": "A-SQL-DDL", "category": "sql", "name": "SQL DDL & constraints"},
+
+    {"id": "A-OS-PROCESS", "category": "os", "name": "Processes & threads"},
+    {"id": "A-OS-SCHED", "category": "os", "name": "CPU scheduling"},
+    {"id": "A-OS-MEMORY", "category": "os", "name": "Memory & paging"},
+    {"id": "A-OS-SYNC", "category": "os", "name": "Synchronization & deadlock"},
+
+    {"id": "A-NET-MODEL", "category": "networks", "name": "OSI/TCP-IP model"},
+    {"id": "A-NET-TRANSPORT", "category": "networks", "name": "TCP/UDP & ports"},
+    {"id": "A-NET-ADDRESSING", "category": "networks", "name": "IP addressing & routing"},
+    {"id": "A-NET-APP", "category": "networks", "name": "Application protocols"},
+
+    {"id": "A-OOP-PRINCIPLES", "category": "oop", "name": "OOP principles"},
+    {"id": "A-OOP-POLYMORPH", "category": "oop", "name": "Polymorphism & inheritance"},
+    {"id": "A-OOP-ABSTRACT", "category": "oop", "name": "Abstraction & encapsulation"},
+
+    {"id": "A-ARCH-CPU", "category": "architecture", "name": "CPU & instruction cycle"},
+    {"id": "A-ARCH-MEMORY", "category": "architecture", "name": "Memory hierarchy & cache"},
+    {"id": "A-ARCH-NUMBER", "category": "architecture", "name": "Number systems & representation"},
+
+    {"id": "A-SE-SDLC", "category": "software_engineering", "name": "SDLC & process models"},
+    {"id": "A-SE-TESTING", "category": "software_engineering", "name": "Testing & quality"},
+    {"id": "A-SE-DESIGN", "category": "software_engineering", "name": "Design & architecture"}
+  ]
+}

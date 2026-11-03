@@ -1,0 +1,24 @@
+{
+  "version": "2026-10-31",
+  "note": "Phase 4 — System Design Academy concept taxonomy. SEPARATE from agent/data/concepts.json (the FairScore taxonomy) and agent/data/assessment_concepts.json. SkillSignals from sysdesign validate against the UNION of all three taxonomies, then flow through the SAME Phase 0 learner_model with source_module='sysdesign'. Ids are stable; adding is safe, renaming orphans past signals. Each concept maps to one evaluation dimension of a design.",
+  "concepts": [
+    {"id": "SD-COMPONENTS", "dimension": "components", "name": "Choosing the right components"},
+    {"id": "SD-CONNECTIONS", "dimension": "connections", "name": "Wiring components correctly"},
+
+    {"id": "SD-DATA-STORE", "dimension": "data", "name": "Primary datastore choice"},
+    {"id": "SD-DATA-PARTITION", "dimension": "data", "name": "Partitioning & sharding"},
+    {"id": "SD-DATA-REPLICATION", "dimension": "data", "name": "Replication & read scaling"},
+
+    {"id": "SD-API-STYLE", "dimension": "api", "name": "API style & contracts"},
+    {"id": "SD-API-GATEWAY", "dimension": "api", "name": "API gateway & edge routing"},
+
+    {"id": "SD-SCALE-CACHE", "dimension": "scalability", "name": "Caching strategy"},
+    {"id": "SD-SCALE-LB", "dimension": "scalability", "name": "Load balancing & horizontal scaling"},
+    {"id": "SD-SCALE-ASYNC", "dimension": "scalability", "name": "Asynchronous processing & queues"},
+
+    {"id": "SD-REL-REDUNDANCY", "dimension": "reliability", "name": "Redundancy & failover"},
+    {"id": "SD-REL-CONSISTENCY", "dimension": "reliability", "name": "Consistency & availability trade-offs"},
+
+    {"id": "SD-TRADEOFF", "dimension": "tradeoffs", "name": "Architecture trade-off analysis"}
+  ]
+}

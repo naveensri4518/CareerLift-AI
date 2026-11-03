@@ -1,0 +1,86 @@
+{
+  "version": "2026-10-31",
+  "note": "Curated concept reference for CareerLift AI. The Verifier checks that every extracted claim's concept_id exists here and is in the question's expected_concepts. key_points are for human review and future entailment checks; they are NOT used to prove correctness in the deterministic core (see DESIGN.md section 6). Every source has a title, publisher, URL and the date it was read.",
+  "sources": {
+    "CLRS4": "Cormen, Leiserson, Rivest, Stein — Introduction to Algorithms, 4th ed., MIT Press (concept definitions cross-checked). Read 2026-10-31.",
+    "PYDOCS": "Python Language Reference & Library docs, python.org. https://docs.python.org/3/ Read 2026-10-31.",
+    "PG16": "PostgreSQL 16 Documentation, The PostgreSQL Global Development Group. https://www.postgresql.org/docs/16/ Read 2026-10-31."
+  },
+  "concepts": [
+    {
+      "id": "C-BIGO-DEF",
+      "source": "CLRS4",
+      "canonical_name": "Big-O notation (asymptotic upper bound)",
+      "key_points": ["describes growth of running time or space as input size grows", "an upper bound, ignores constant factors and lower-order terms"],
+      "aliases": ["big o", "time complexity", "asymptotic", "order of growth", "complexity"]
+    },
+    {
+      "id": "C-BIGO-WORSTCASE",
+      "source": "CLRS4",
+      "canonical_name": "Worst-case vs average-case",
+      "key_points": ["worst case is the maximum over all inputs of size n", "average and worst case can differ (e.g. quicksort)"],
+      "aliases": ["worst case", "average case", "best case"]
+    },
+    {
+      "id": "C-BINSEARCH",
+      "source": "CLRS4",
+      "canonical_name": "Binary search requires a sorted array and runs in O(log n)",
+      "key_points": ["array must be sorted", "halves the search range each step", "O(log n) comparisons"],
+      "aliases": ["binary search", "log n search", "halving"]
+    },
+    {
+      "id": "C-HASH-AVG",
+      "source": "CLRS4",
+      "canonical_name": "Hash table average-case O(1) lookup, worst-case O(n)",
+      "key_points": ["average O(1) with a good hash and load factor", "worst case O(n) under heavy collisions"],
+      "aliases": ["hash map", "hash table", "dictionary lookup", "o(1)"]
+    },
+    {
+      "id": "C-RECURSION-BASE",
+      "source": "CLRS4",
+      "canonical_name": "Recursion needs a base case",
+      "key_points": ["a base case stops the recursion", "missing/incorrect base case causes infinite recursion / stack overflow"],
+      "aliases": ["recursion", "base case", "recursive call", "stack overflow"]
+    },
+    {
+      "id": "C-SQL-JOIN",
+      "source": "PG16",
+      "canonical_name": "INNER JOIN vs LEFT JOIN",
+      "key_points": ["INNER JOIN keeps only matching rows", "LEFT JOIN keeps all left rows, NULLs where no match"],
+      "aliases": ["inner join", "left join", "outer join", "join"]
+    },
+    {
+      "id": "C-SQL-INDEX",
+      "source": "PG16",
+      "canonical_name": "Indexes speed up lookups but cost on writes",
+      "key_points": ["an index speeds up matching reads", "indexes add overhead to inserts/updates and use space"],
+      "aliases": ["index", "indexing", "b-tree index"]
+    },
+    {
+      "id": "C-PY-MUTABLE-DEFAULT",
+      "source": "PYDOCS",
+      "canonical_name": "Mutable default argument pitfall",
+      "key_points": ["default values are evaluated once at definition time", "a mutable default (e.g. []) is shared across calls"],
+      "aliases": ["mutable default", "default argument", "shared list default"]
+    }
+  ],
+  "note_exclusion_pairs": "Only list pairs of concepts that are genuinely mutually exclusive as STATEMENTS about the same thing (e.g. a claim that something is both O(1) and O(n) for the identical operation). Different algorithms (hash lookup vs binary search) are NOT contradictory and must never be listed here.",
+  "exclusion_pairs": [],
+  "note_misconceptions": "A specific misconception is assigned ONLY when the student makes an explicit, grounded INCORRECT assertion whose wording matches a misconception's 'signature' phrases. 'signature' holds lowercase phrases that, when found together with the concept in the student's quoted wrong assertion, identify this specific misconception. This is a heuristic match against curated definitions, NOT proof of the student's internal belief.",
+  "misconceptions": [
+    {"id": "M-BIGO-AVG-WORST", "about": "C-BIGO-WORSTCASE", "text": "Confuses average-case with worst-case complexity.",
+     "signature": ["average is the same as worst", "worst case is the same as average", "average and worst are the same"]},
+    {"id": "M-BINSEARCH-UNSORTED", "about": "C-BINSEARCH", "text": "Thinks binary search works on an unsorted array.",
+     "signature": ["binary search works on an unsorted", "binary search on unsorted", "don't need to sort", "no need to sort", "without sorting"]},
+    {"id": "M-HASH-ALWAYS-O1", "about": "C-HASH-AVG", "text": "Claims hash lookup is always O(1), ignoring worst case.",
+     "signature": ["always o(1)", "hash is always o(1)", "never o(n)", "o(1) in the worst case", "always constant time"]},
+    {"id": "M-RECURSION-NOBASE", "about": "C-RECURSION-BASE", "text": "Omits or misstates the base case.",
+     "signature": ["no base case", "don't need a base case", "doesn't need a base case", "without a base case"]},
+    {"id": "M-JOIN-INNER-LEFT", "about": "C-SQL-JOIN", "text": "Treats INNER JOIN and LEFT JOIN as equivalent.",
+     "signature": ["inner join and left join are the same", "left join is the same as inner", "same as an inner join"]},
+    {"id": "M-INDEX-FREE", "about": "C-SQL-INDEX", "text": "Thinks indexes have no downside (ignores write/space cost).",
+     "signature": ["indexes have no downside", "index has no cost", "no cost to indexes", "indexes are always free", "no downside to adding an index"]},
+    {"id": "M-MUTABLE-DEFAULT", "about": "C-PY-MUTABLE-DEFAULT", "text": "Unaware that a mutable default argument is shared across calls.",
+     "signature": ["default list is new each call", "fresh list each call", "new empty list every call", "default is created each time"]}
+  ]
+}
