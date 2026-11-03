@@ -1,0 +1,63 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "BedrockNovaInference",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel",
+        "bedrock:InvokeModelWithResponseStream"
+      ],
+      "Resource": [
+        "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-2-lite-v1:0",
+        "arn:aws:bedrock:us-east-1:074095960941:inference-profile/us.amazon.nova-2-lite-v1:0",
+        "arn:aws:bedrock:us-east-2::foundation-model/amazon.nova-2-lite-v1:0",
+        "arn:aws:bedrock:us-west-2::foundation-model/amazon.nova-2-lite-v1:0"
+      ]
+    },
+    {
+      "Sid": "BedrockReadOnlyDiscovery",
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:GetFoundationModel",
+        "bedrock:GetInferenceProfile"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "TranslateFeedbackFuture",
+      "Effect": "Allow",
+      "Action": [ "translate:TranslateText" ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "CloudWatchLogsOwnGroup",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogStream",
+        "logs:PutLogEvents",
+        "logs:DescribeLogStreams"
+      ],
+      "Resource": "arn:aws:logs:us-east-1:074095960941:log-group:/careerlift/*:*"
+    },
+    {
+      "Sid": "CloudWatchLogsCreateGroup",
+      "Effect": "Allow",
+      "Action": [ "logs:CreateLogGroup" ],
+      "Resource": "arn:aws:logs:us-east-1:074095960941:log-group:/careerlift/*"
+    },
+    {
+      "Sid": "CloudWatchMetricsNamespaced",
+      "Effect": "Allow",
+      "Action": [ "cloudwatch:PutMetricData" ],
+      "Resource": "*",
+      "Condition": { "StringEquals": { "cloudwatch:namespace": "CareerLift" } }
+    },
+    {
+      "Sid": "ReadAuthPepperParam",
+      "Effect": "Allow",
+      "Action": [ "ssm:GetParameter", "ssm:GetParameters" ],
+      "Resource": "arn:aws:ssm:us-east-1:074095960941:parameter/careerlift/*"
+    }
+  ]
+}
