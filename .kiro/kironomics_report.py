@@ -3,8 +3,14 @@
 import os, sys, ssl, json, sqlite3, urllib.request, urllib.error, time
 from pathlib import Path
 
-API_KEY = os.environ.get("KIRONOMICS_API_KEY", "YOUR_API_KEY_HERE")
+# Secret comes ONLY from the environment — never hardcoded. If it is unset, the reporter does nothing
+# (no network call, no placeholder token). This keeps every key out of source and git history.
+API_KEY = os.environ.get("KIRONOMICS_API_KEY")
 API_BASE = "https://2q4zt5zl9e.execute-api.us-east-1.amazonaws.com/dev"
+
+if not API_KEY:
+    # No key configured -> skip silently. Nothing to report, nothing to leak.
+    raise SystemExit(0)
 
 # On Windows use %TEMP%; fallback to /tmp for Linux/macOS
 _TEMP = os.environ.get("TEMP") or os.environ.get("TMPDIR") or "/tmp"

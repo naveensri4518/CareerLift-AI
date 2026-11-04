@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 420" font-family="Inter,Segoe UI,system-ui,sans-serif">
+  <rect width="820" height="420" fill="#07060d" rx="12"/>
+  <pattern id="d4" width="22" height="22" patternUnits="userSpaceOnUse">
+    <circle cx="11" cy="11" r="1" fill="rgba(255,255,255,0.04)"/>
+  </pattern>
+  <rect width="820" height="420" fill="url(#d4)" rx="12"/>
+
+  <text x="410" y="32" text-anchor="middle" font-size="17" font-weight="700" fill="white">AWS Production Architecture</text>
+  <text x="410" y="50" text-anchor="middle" font-size="11" fill="#64748b">us-east-1 · EC2 t3.small · No static keys · IMDSv2 required</text>
+
+  <!-- Internet -->
+  <rect x="30" y="75" width="100" height="50" rx="10" fill="none" stroke="rgba(255,255,255,0.15)" stroke-width="1.5"/>
+  <text x="80" y="97" text-anchor="middle" font-size="11" fill="#94a3b8">🌐 Internet</text>
+  <text x="80" y="113" text-anchor="middle" font-size="10" fill="#64748b">HTTPS :443</text>
+
+  <!-- EC2 boundary -->
+  <rect x="175" y="60" width="460" height="305" rx="14" fill="none" stroke="#f59e0b" stroke-width="2" stroke-dasharray="7,4"/>
+  <text x="280" y="78" font-size="11" font-weight="600" fill="#fbbf24">EC2 t3.small · Amazon Linux 2023 · us-east-1a</text>
+
+  <!-- Nginx -->
+  <rect x="195" y="90" width="130" height="60" rx="8" fill="#151327" stroke="#4ade80" stroke-width="1.5"/>
+  <text x="260" y="113" text-anchor="middle" font-size="11" font-weight="600" fill="#4ade80">Nginx 1.30</text>
+  <text x="260" y="128" text-anchor="middle" font-size="9.5" fill="#94a3b8">Serves /var/www/careerlift</text>
+  <text x="260" y="141" text-anchor="middle" font-size="9.5" fill="#94a3b8">/api → 127.0.0.1:8000</text>
+
+  <!-- FastAPI -->
+  <rect x="365" y="90" width="130" height="60" rx="8" fill="#151327" stroke="#8b5cf6" stroke-width="1.5"/>
+  <text x="430" y="113" text-anchor="middle" font-size="11" font-weight="600" fill="#a78bfa">FastAPI</text>
+  <text x="430" y="128" text-anchor="middle" font-size="9.5" fill="#94a3b8">Uvicorn 1 worker</text>
+  <text x="430" y="141" text-anchor="middle" font-size="9.5" fill="#94a3b8">127.0.0.1:8000</text>
+
+  <!-- Docker engine -->
+  <rect x="195" y="195" width="130" height="55" rx="8" fill="#151327" stroke="#22c55e" stroke-width="1.5"/>
+  <text x="260" y="217" text-anchor="middle" font-size="11" font-weight="600" fill="#22c55e">Docker 25</text>
+  <text x="260" y="233" text-anchor="middle" font-size="9.5" fill="#94a3b8">coding-sandbox image</text>
+  <text x="260" y="247" text-anchor="middle" font-size="9.5" fill="#94a3b8">Python+g++17+JDK17</text>
+
+  <!-- SQLite on EBS -->
+  <rect x="365" y="195" width="130" height="55" rx="8" fill="#151327" stroke="#f97316" stroke-width="1.5"/>
+  <text x="430" y="217" text-anchor="middle" font-size="11" font-weight="600" fill="#fb923c">SQLite</text>
+  <text x="430" y="233" text-anchor="middle" font-size="9.5" fill="#94a3b8">/data/careerlift.db</text>
+  <text x="430" y="247" text-anchor="middle" font-size="9.5" fill="#94a3b8">EBS gp3 20 GB</text>
+
+  <!-- Let's encrypt -->
+  <rect x="365" y="300" width="130" height="50" rx="8" fill="#151327" stroke="#34d399" stroke-width="1"/>
+  <text x="430" y="320" text-anchor="middle" font-size="10" font-weight="600" fill="#34d399">Let's Encrypt</text>
+  <text x="430" y="334" text-anchor="middle" font-size="9.5" fill="#94a3b8">nip.io domain</text>
+  <text x="430" y="347" text-anchor="middle" font-size="9.5" fill="#94a3b8">Auto-renew</text>
+
+  <!-- systemd -->
+  <rect x="195" y="300" width="130" height="50" rx="8" fill="#151327" stroke="#60a5fa" stroke-width="1"/>
+  <text x="260" y="320" text-anchor="middle" font-size="10" font-weight="600" fill="#60a5fa">systemd</text>
+  <text x="260" y="334" text-anchor="middle" font-size="9.5" fill="#94a3b8">careerlift-api.service</text>
+  <text x="260" y="347" text-anchor="middle" font-size="9.5" fill="#94a3b8">Restart on failure</text>
+
+  <!-- Arrows inside EC2 -->
+  <line x1="325" y1="120" x2="365" y2="120" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#a4)"/>
+  <line x1="430" y1="150" x2="430" y2="195" stroke="#f97316" stroke-width="1.5" stroke-dasharray="4,2" marker-end="url(#a4)"/>
+  <line x1="430" y1="150" x2="260" y2="195" stroke="#22c55e" stroke-width="1" stroke-dasharray="4,2" marker-end="url(#a4)"/>
+
+  <!-- Arrow internet → nginx -->
+  <line x1="130" y1="100" x2="195" y2="100" stroke="#4ade80" stroke-width="2" marker-end="url(#a4)"/>
+
+  <!-- AWS services (right side) -->
+  <rect x="660" y="60" width="145" height="305" rx="10" fill="none" stroke="#f59e0b" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="733" y="78" text-anchor="middle" font-size="10" font-weight="600" fill="#fbbf24">AWS Services</text>
+
+  <rect x="672" y="88" width="121" height="45" rx="6" fill="#151327" stroke="#f59e0b" stroke-width="1"/>
+  <text x="733" y="108" text-anchor="middle" font-size="10" font-weight="600" fill="#fbbf24">Bedrock</text>
+  <text x="733" y="122" text-anchor="middle" font-size="9" fill="#94a3b8">Nova 2 Lite · IAM role</text>
+
+  <rect x="672" y="143" width="121" height="45" rx="6" fill="#151327" stroke="#8b5cf6" stroke-width="1"/>
+  <text x="733" y="163" text-anchor="middle" font-size="10" font-weight="600" fill="#a78bfa">SSM</text>
+  <text x="733" y="177" text-anchor="middle" font-size="9" fill="#94a3b8">/careerlift/auth_pepper</text>
+
+  <rect x="672" y="198" width="121" height="45" rx="6" fill="#151327" stroke="#3b82f6" stroke-width="1"/>
+  <text x="733" y="218" text-anchor="middle" font-size="10" font-weight="600" fill="#60a5fa">CloudWatch</text>
+  <text x="733" y="232" text-anchor="middle" font-size="9" fill="#94a3b8">Logs + budget alerts</text>
+
+  <rect x="672" y="253" width="121" height="45" rx="6" fill="#151327" stroke="#22c55e" stroke-width="1"/>
+  <text x="733" y="273" text-anchor="middle" font-size="10" font-weight="600" fill="#4ade80">IAM Role</text>
+  <text x="733" y="287" text-anchor="middle" font-size="9" fill="#94a3b8">EC2RuntimeRole</text>
+
+  <rect x="672" y="308" width="121" height="45" rx="6" fill="#151327" stroke="#f97316" stroke-width="1"/>
+  <text x="733" y="328" text-anchor="middle" font-size="10" font-weight="600" fill="#fb923c">EBS gp3</text>
+  <text x="733" y="342" text-anchor="middle" font-size="9" fill="#94a3b8">snap-04152cf4eb55efe93</text>
+
+  <!-- Arrows EC2 → AWS services -->
+  <line x1="635" y1="130" x2="660" y2="112" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#a4)"/>
+  <line x1="635" y1="140" x2="660" y2="165" stroke="#a78bfa" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#a4)"/>
+
+  <!-- SG box -->
+  <rect x="30" y="350" width="790" height="55" rx="8" fill="#151327" stroke="rgba(255,255,255,0.07)"/>
+  <text x="415" y="369" text-anchor="middle" font-size="11" font-weight="600" fill="white">Security Group sg-01b6c4bb7fc76f829</text>
+  <text x="180" y="391" text-anchor="middle" font-size="10" fill="#4ade80">✓ TCP 443 0.0.0.0/0 (HTTPS)</text>
+  <text x="415" y="391" text-anchor="middle" font-size="10" fill="#fbbf24">✓ TCP 80 0.0.0.0/0 (redirect only)</text>
+  <text x="650" y="391" text-anchor="middle" font-size="10" fill="#f87171">✓ TCP 22 dev-IP/32 only (SSH)</text>
+
+  <defs>
+    <marker id="a4" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#f59e0b"/>
+    </marker>
+  </defs>
+</svg>

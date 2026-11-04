@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 360" font-family="Inter,Segoe UI,system-ui,sans-serif">
+  <rect width="780" height="360" fill="#07060d" rx="12"/>
+  <pattern id="d6" width="22" height="22" patternUnits="userSpaceOnUse">
+    <circle cx="11" cy="11" r="1" fill="rgba(255,255,255,0.04)"/>
+  </pattern>
+  <rect width="780" height="360" fill="url(#d6)" rx="12"/>
+
+  <text x="390" y="32" text-anchor="middle" font-size="17" font-weight="700" fill="white">The FairScore Fairness Claim</text>
+  <text x="390" y="50" text-anchor="middle" font-size="11" fill="#64748b">Same technical content · Different English register · Technical band should not change</text>
+
+  <!-- Left: plain English -->
+  <rect x="30" y="72" width="330" height="100" rx="10" fill="#151327" stroke="#8b5cf6" stroke-width="1.5"/>
+  <text x="195" y="94" text-anchor="middle" font-size="11" font-weight="600" fill="#a78bfa">Plain English (Student A)</text>
+  <text x="50" y="112" font-size="10" fill="#94a3b8" font-style="italic">"hash map is fast, O(1) most time.</text>
+  <text x="50" y="126" font-size="10" fill="#94a3b8" font-style="italic">but if many keys hit same bucket</text>
+  <text x="50" y="140" font-size="10" fill="#94a3b8" font-style="italic">it slow, becomes O(n) worst case."</text>
+  <text x="195" y="163" text-anchor="middle" font-size="9.5" fill="#64748b">Simple grammar · Short sentences · Correct idea</text>
+
+  <!-- Right: advanced English -->
+  <rect x="420" y="72" width="330" height="100" rx="10" fill="#151327" stroke="#3b82f6" stroke-width="1.5"/>
+  <text x="585" y="94" text-anchor="middle" font-size="11" font-weight="600" fill="#60a5fa">Advanced English (Student B)</text>
+  <text x="440" y="112" font-size="10" fill="#94a3b8" font-style="italic">"A hash table provides amortized O(1)</text>
+  <text x="440" y="126" font-size="10" fill="#94a3b8" font-style="italic">lookups on average; however, under</text>
+  <text x="440" y="140" font-size="10" fill="#94a3b8" font-style="italic">pathological collisions, O(n) worst case."</text>
+  <text x="585" y="163" text-anchor="middle" font-size="9.5" fill="#64748b">Sophisticated vocabulary · Same technical idea</text>
+
+  <!-- Baseline row -->
+  <text x="390" y="202" text-anchor="middle" font-size="11" font-weight="600" fill="#f87171">Naive one-prompt grader (baseline)</text>
+  <rect x="100" y="212" width="170" height="36" rx="6" fill="#1c0a0a" stroke="#f87171" stroke-width="1.5"/>
+  <text x="185" y="232" text-anchor="middle" font-size="11" font-weight="700" fill="#fbbf24">Partial / Weak</text>
+  <text x="185" y="244" text-anchor="middle" font-size="9.5" fill="#64748b">penalised for plain English</text>
+
+  <rect x="510" y="212" width="170" height="36" rx="6" fill="#0a1c0a" stroke="#4ade80" stroke-width="1.5"/>
+  <text x="595" y="232" text-anchor="middle" font-size="11" font-weight="700" fill="#34d399">Solid / Strong</text>
+  <text x="595" y="244" text-anchor="middle" font-size="9.5" fill="#64748b">rewarded for fluent prose</text>
+
+  <!-- Gap arrow -->
+  <line x1="270" y1="230" x2="510" y2="230" stroke="#f87171" stroke-width="2" stroke-dasharray="4,2"/>
+  <text x="390" y="224" text-anchor="middle" font-size="10" fill="#f87171">← FAIRNESS GAP →</text>
+  <text x="390" y="256" text-anchor="middle" font-size="9.5" fill="#f87171">Same content, different band — the harm CareerLift exists to reduce</text>
+
+  <!-- CareerLift row -->
+  <text x="390" y="285" text-anchor="middle" font-size="11" font-weight="600" fill="#34d399">CareerLift FairScore (target behaviour)</text>
+  <rect x="100" y="295" width="170" height="36" rx="6" fill="#0a1c14" stroke="#34d399" stroke-width="1.5"/>
+  <text x="185" y="315" text-anchor="middle" font-size="11" font-weight="700" fill="#34d399">Solid</text>
+  <text x="185" y="327" text-anchor="middle" font-size="9.5" fill="#94a3b8">correct technical content</text>
+
+  <rect x="510" y="295" width="170" height="36" rx="6" fill="#0a1c14" stroke="#34d399" stroke-width="1.5"/>
+  <text x="595" y="315" text-anchor="middle" font-size="11" font-weight="700" fill="#34d399">Solid</text>
+  <text x="595" y="327" text-anchor="middle" font-size="9.5" fill="#94a3b8">same band for same content</text>
+
+  <!-- No gap -->
+  <line x1="270" y1="313" x2="510" y2="313" stroke="#34d399" stroke-width="2"/>
+  <text x="390" y="308" text-anchor="middle" font-size="10" fill="#34d399">← gap = 0 (target) →</text>
+  <text x="390" y="343" text-anchor="middle" font-size="9.5" fill="#64748b">The fairness gap is measured on paraphrase pairs and reported honestly. It is a property of the dataset, not a universal guarantee.</text>
+</svg>

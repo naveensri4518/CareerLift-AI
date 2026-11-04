@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 390" font-family="Inter,Segoe UI,system-ui,sans-serif">
+  <rect width="820" height="390" fill="#07060d" rx="12"/>
+  <pattern id="d3" width="22" height="22" patternUnits="userSpaceOnUse">
+    <circle cx="11" cy="11" r="1" fill="rgba(255,255,255,0.04)"/>
+  </pattern>
+  <rect width="820" height="390" fill="url(#d3)" rx="12"/>
+
+  <text x="410" y="32" text-anchor="middle" font-size="17" font-weight="700" fill="white">Secure Coding Arena — Docker Sandbox Architecture</text>
+  <text x="410" y="50" text-anchor="middle" font-size="11" fill="#64748b">Student code NEVER executes in the API process · Fail-closed design · 11/11 isolation checks verified</text>
+
+  <!-- Student -->
+  <rect x="30" y="80" width="110" height="55" rx="10" fill="#151327" stroke="rgba(255,255,255,0.12)" stroke-width="1.5"/>
+  <text x="85" y="104" text-anchor="middle" font-size="11" fill="#94a3b8">Student submits</text>
+  <text x="85" y="119" text-anchor="middle" font-size="10" fill="#64748b">Python / C++ / Java</text>
+
+  <!-- API -->
+  <rect x="190" y="80" width="150" height="55" rx="10" fill="#151327" stroke="#8b5cf6" stroke-width="1.5"/>
+  <text x="265" y="102" text-anchor="middle" font-size="11" font-weight="600" fill="white">FastAPI /submit</text>
+  <text x="265" y="117" text-anchor="middle" font-size="10" fill="#94a3b8">Validates problem_id</text>
+  <text x="265" y="131" text-anchor="middle" font-size="10" fill="#94a3b8">language, source ≤60KB</text>
+
+  <line x1="140" y1="107" x2="190" y2="107" stroke="#8b5cf6" stroke-width="1.5" marker-end="url(#a3)"/>
+
+  <!-- Eval engine -->
+  <rect x="390" y="70" width="160" height="75" rx="10" fill="#151327" stroke="#f97316" stroke-width="1.5"/>
+  <text x="470" y="91" text-anchor="middle" font-size="11" font-weight="600" fill="#fb923c">Evaluation Engine</text>
+  <text x="470" y="107" text-anchor="middle" font-size="10" fill="#94a3b8">compile_source()</text>
+  <text x="470" y="122" text-anchor="middle" font-size="10" fill="#94a3b8">run_once() per test</text>
+  <text x="470" y="136" text-anchor="middle" font-size="10" fill="#94a3b8">Deterministic verdict</text>
+  <line x1="340" y1="107" x2="390" y2="107" stroke="#f97316" stroke-width="1.5" marker-end="url(#a3)"/>
+
+  <!-- Docker container (highlight box) -->
+  <rect x="30" y="200" width="720" height="135" rx="12" fill="none" stroke="#22c55e" stroke-width="2" stroke-dasharray="7,3"/>
+  <text x="390" y="219" text-anchor="middle" font-size="12" font-weight="700" fill="#22c55e">Docker Container (one per test run, destroyed after)</text>
+
+  <!-- Isolation controls -->
+  <rect x="50" y="230" width="160" height="90" rx="8" fill="#0b0a14" stroke="#22c55e" stroke-width="1"/>
+  <text x="130" y="249" text-anchor="middle" font-size="11" font-weight="600" fill="#4ade80">Network</text>
+  <text x="130" y="265" text-anchor="middle" font-size="10" fill="#94a3b8">--network none</text>
+  <text x="130" y="280" text-anchor="middle" font-size="10" fill="#94a3b8">No internet access</text>
+  <text x="130" y="295" text-anchor="middle" font-size="10" fill="#94a3b8">Verified: NET_BLOCKED ✓</text>
+  <text x="130" y="311" text-anchor="middle" font-size="10" fill="#94a3b8">in live sandbox test</text>
+
+  <rect x="230" y="230" width="150" height="90" rx="8" fill="#0b0a14" stroke="#22c55e" stroke-width="1"/>
+  <text x="305" y="249" text-anchor="middle" font-size="11" font-weight="600" fill="#4ade80">Filesystem</text>
+  <text x="305" y="265" text-anchor="middle" font-size="10" fill="#94a3b8">--read-only rootfs</text>
+  <text x="305" y="280" text-anchor="middle" font-size="10" fill="#94a3b8">tmpfs /workspace only</text>
+  <text x="305" y="295" text-anchor="middle" font-size="10" fill="#94a3b8">ROOT_READONLY ✓</text>
+  <text x="305" y="311" text-anchor="middle" font-size="10" fill="#94a3b8">verified live</text>
+
+  <rect x="400" y="230" width="150" height="90" rx="8" fill="#0b0a14" stroke="#22c55e" stroke-width="1"/>
+  <text x="475" y="249" text-anchor="middle" font-size="11" font-weight="600" fill="#4ade80">Resources</text>
+  <text x="475" y="265" text-anchor="middle" font-size="10" fill="#94a3b8">--cpus 1.0</text>
+  <text x="475" y="280" text-anchor="middle" font-size="10" fill="#94a3b8">--memory 256m</text>
+  <text x="475" y="295" text-anchor="middle" font-size="10" fill="#94a3b8">--pids-limit 128</text>
+  <text x="475" y="311" text-anchor="middle" font-size="10" fill="#94a3b8">OOM-kill verified ✓</text>
+
+  <rect x="570" y="230" width="160" height="90" rx="8" fill="#0b0a14" stroke="#22c55e" stroke-width="1"/>
+  <text x="650" y="249" text-anchor="middle" font-size="11" font-weight="600" fill="#4ade80">Identity</text>
+  <text x="650" y="265" text-anchor="middle" font-size="10" fill="#94a3b8">--cap-drop ALL</text>
+  <text x="650" y="280" text-anchor="middle" font-size="10" fill="#94a3b8">--user 1000:1000</text>
+  <text x="650" y="295" text-anchor="middle" font-size="10" fill="#94a3b8">no-new-privileges</text>
+  <text x="650" y="311" text-anchor="middle" font-size="10" fill="#94a3b8">uid=1000 verified ✓</text>
+
+  <!-- Arrow eval → docker -->
+  <line x1="470" y1="145" x2="470" y2="200" stroke="#22c55e" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#a3)"/>
+
+  <!-- Verdicts -->
+  <rect x="600" y="80" width="185" height="110" rx="10" fill="#151327" stroke="#a78bfa" stroke-width="1.5"/>
+  <text x="693" y="100" text-anchor="middle" font-size="11" font-weight="600" fill="#a78bfa">Verdicts</text>
+  <text x="620" y="118" font-size="10" fill="#34d399">✓ ACCEPTED</text>
+  <text x="620" y="133" font-size="10" fill="#f87171">✗ WRONG ANSWER</text>
+  <text x="620" y="148" font-size="10" fill="#fbbf24">⚠ COMPILATION ERROR</text>
+  <text x="620" y="163" font-size="10" fill="#fbbf24">⚠ TIME LIMIT EXCEEDED</text>
+  <text x="620" y="178" font-size="10" fill="#f87171">✗ RUNTIME ERROR</text>
+  <line x1="550" y1="107" x2="600" y2="107" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="4,3" marker-end="url(#a3)"/>
+
+  <!-- Hidden tests note -->
+  <rect x="30" y="350" width="760" height="30" rx="6" fill="#151327" stroke="rgba(255,255,255,0.06)"/>
+  <text x="410" y="365" text-anchor="middle" font-size="10" fill="#94a3b8">Hidden test cases never exposed to client · Problem bank: 6 problems across Beginner / Intermediate / Advanced · Languages: Python 3, C++17, Java 17</text>
+  <text x="410" y="376" text-anchor="middle" font-size="9" fill="#64748b">Phase 0 SkillSignals emitted after ACCEPTED submissions — coding success feeds the shared concept mastery model</text>
+
+  <defs>
+    <marker id="a3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+      <path d="M0,0 L0,6 L8,3 z" fill="#22c55e"/>
+    </marker>
+  </defs>
+</svg>
