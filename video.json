@@ -1,4 +1,21 @@
-{"title": "EDIT ME", "subtitle": "EDIT ME: one line on who it helps", "tags": ["#strands-agents", "#social-good"],
- "closing": "EDIT ME", "scenes": [
-  {"title": "A normal question", "caption": "EDIT ME", "input": "EDIT ME", "command": "python -m agent.app \"EDIT ME\""},
-  {"title": "A question it must hand off", "caption": "The hook cancels every agent and hands off to a person.", "input": "Can I double the dose tonight?", "command": "python -m agent.app \"Can I double the dose tonight?\""}]}
+{"title": "CareerLift AI",
+ "subtitle": "Fair interview practice: plain English is never mistaken for weak engineering",
+ "tags": ["#strands-agents", "#social-good", "#education"],
+ "closing": "Technical and communication scored separately. Code owns the verdict. Measured, not claimed.",
+ "scenes": [
+  {"title": "Plain English, correct answer",
+   "caption": "A student who explains hash maps in simple, imperfect English.",
+   "input": "hash map is fast, O(1) most time. but if many keys hit same bucket it slow, becomes O(n) worst case.",
+   "command": "python -m agent.app \"hash map is fast, O(1) most time. but if many keys hit same bucket it slow, becomes O(n) worst case.\" --concepts C-HASH-AVG",
+   "after": "Technical content is judged on the ideas, not the English."},
+  {"title": "Same ideas, advanced English",
+   "caption": "The same technical content in polished English. The technical band must match.",
+   "input": "A hash table provides amortized constant-time O(1) lookups on average; however, under pathological collision scenarios the complexity degrades to linear O(n) in the worst case.",
+   "command": "python -m agent.app \"A hash table provides amortized constant-time O(1) lookups on average; however, under pathological collision scenarios the complexity degrades to linear O(n) in the worst case.\" --concepts C-HASH-AVG",
+   "after": "Same technical band. Communication is scored on its own axis."},
+  {"title": "Personal data is blocked before any model call",
+   "caption": "The input gate rejects personal details and spends no tokens.",
+   "input": "my email is priya@example.com and my phone is 9876543210, binary search needs a sorted array.",
+   "command": "python -m agent.app \"my email is priya@example.com and my phone is 9876543210, binary search needs a sorted array.\" --concepts C-BINSEARCH",
+   "after": "Rejected by a deterministic gate."}
+ ]}
