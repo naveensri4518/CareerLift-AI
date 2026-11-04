@@ -1,0 +1,82 @@
+{
+  "spec": {
+    "title": "CareerLift AI",
+    "subtitle": "Fair interview practice: plain English is never mistaken for weak engineering",
+    "tags": [
+      "#strands-agents",
+      "#social-good",
+      "#education"
+    ],
+    "closing": "Technical and communication scored separately. Code owns the verdict. Measured, not claimed.",
+    "scenes": [
+      {
+        "title": "Plain English, correct answer",
+        "caption": "A student who explains hash maps in simple, imperfect English.",
+        "input": "hash map is fast, O(1) most time. but if many keys hit same bucket it slow, becomes O(n) worst case.",
+        "command": "python -m agent.app \"hash map is fast, O(1) most time. but if many keys hit same bucket it slow, becomes O(n) worst case.\" --concepts C-HASH-AVG",
+        "after": "Technical content is judged on the ideas, not the English."
+      },
+      {
+        "title": "Same ideas, advanced English",
+        "caption": "The same technical content in polished English. The technical band must match.",
+        "input": "A hash table provides amortized constant-time O(1) lookups on average; however, under pathological collision scenarios the complexity degrades to linear O(n) in the worst case.",
+        "command": "python -m agent.app \"A hash table provides amortized constant-time O(1) lookups on average; however, under pathological collision scenarios the complexity degrades to linear O(n) in the worst case.\" --concepts C-HASH-AVG",
+        "after": "Same technical band. Communication is scored on its own axis."
+      },
+      {
+        "title": "Personal data is blocked before any model call",
+        "caption": "The input gate rejects personal details and spends no tokens.",
+        "input": "my email is priya@example.com and my phone is 9876543210, binary search needs a sorted array.",
+        "command": "python -m agent.app \"my email is priya@example.com and my phone is 9876543210, binary search needs a sorted array.\" --concepts C-BINSEARCH",
+        "after": "Rejected by a deterministic gate."
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "title": "Plain English, correct answer",
+      "command": "python -m agent.app \"hash map is fast, O(1) most time. but if many keys hit same bucket it slow, becomes O(n) worst case.\" --concepts C-HASH-AVG",
+      "exit": 0,
+      "evidence": [],
+      "output": [
+        "[verify] coverage 1.00 | dropped 0 | contradictions 0 | abstain False",
+        "[score] technical=Strong communication=Strong misconceptions=[] | 14 ms",
+        "",
+        "Technical band:     Strong",
+        "Communication band: Strong",
+        "[LOCAL DEMO / MOCK EVALUATION] Technical: Strong. Communication: Strong."
+      ]
+    },
+    {
+      "title": "Same ideas, advanced English",
+      "command": "python -m agent.app \"A hash table provides amortized constant-time O(1) lookups on average; however, under pathological collision scenarios the complexity degrades to linear O(n) in the worst case.\" --concepts C-HASH-AVG",
+      "exit": 0,
+      "evidence": [],
+      "output": [
+        "[verify] coverage 1.00 | dropped 0 | contradictions 0 | abstain False",
+        "[score] technical=Strong communication=Strong misconceptions=[] | 10 ms",
+        "",
+        "Technical band:     Strong",
+        "Communication band: Strong",
+        "[LOCAL DEMO / MOCK EVALUATION] Technical: Strong. Communication: Strong."
+      ]
+    },
+    {
+      "title": "Personal data is blocked before any model call",
+      "command": "python -m agent.app \"my email is priya@example.com and my phone is 9876543210, binary search needs a sorted array.\" --concepts C-BINSEARCH",
+      "exit": 0,
+      "evidence": [],
+      "output": [
+        "[gate] personal data detected -> input rejected, no model call",
+        "",
+        "Technical: not assessed (abstained)",
+        "Communication: not assessed",
+        "Please remove personal details (phone, email, id numbers) and send only your interview answer. We never need your personal data."
+      ]
+    }
+  ],
+  "started": "2026-11-04 15:54:02",
+  "seconds": 34.0,
+  "file": "results/demo.webm",
+  "under_3_min": true
+}
