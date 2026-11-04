@@ -58,6 +58,7 @@ export default function Misconceptions() {
                     {info.topic ? (
                       <Link
                         to="/app/practice"
+                        state={{ topic: info.topic }}
                         className="flex items-center gap-1 text-xs font-medium text-brand-violet hover:underline"
                       >
                         <BookOpen size={13} /> Practise {topicLabel(info.topic)} <ArrowRight size={13} />

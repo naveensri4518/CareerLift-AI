@@ -62,6 +62,26 @@ def _concept_terms(concept_id: str) -> set[str]:
     return {t for t in terms if t not in stop}
 
 
+def _concept_cues(concept_id: str) -> list[str]:
+    """Curated PLAIN-LANGUAGE phrases that show the concept was ADDRESSED without textbook vocabulary.
+
+    Language fairness (DESIGN.md sections 2 & 7): a correct answer in plain English must be recognised,
+    not silently dropped to 'absent' just because it avoided jargon. A cue match means 'touched this
+    concept', never 'answered it correctly' — the caller caps a cue-only match at 'partial'.
+    """
+    c = fairscore.concept_by_id().get(concept_id, {})
+    return [cue.lower() for cue in c.get("cues", []) if cue and cue.strip()]
+
+
+def _find_span_for_cues(answer: str, cues: list[str]) -> str | None:
+    """Return the first sentence of the answer that contains a curated cue phrase (verbatim substring)."""
+    for sent in _sentences(answer):
+        low = sent.lower()
+        if any(cue in low for cue in cues):
+            return sent
+    return None
+
+
 def _incorrect_signature_hit(concept_id: str, answer: str) -> str | None:
     """If the answer verbatim contains a misconception signature phrase for this concept, return the
     grounded sentence that contains it (so fairscore can match + ground it)."""
@@ -90,16 +110,25 @@ def extract_claims(answer: str, expected_concepts: list[str]) -> TechnicalClaims
         if bad_span:
             claims.append(Claim(concept_id=cid, status="incorrect", evidence_span=bad_span))
             continue
-        # 2) does the answer mention the concept's vocabulary?
+        # 2) does the answer mention the concept's textbook vocabulary?
         terms = _concept_terms(cid)
         span = _find_span_for_terms(answer, terms)
-        if not span:
-            claims.append(Claim(concept_id=cid, status="absent", evidence_span=""))
+        if span:
+            # supported vs partial: a fuller sentence (more matching terms) reads as supported
+            hits = sum(1 for t in terms if t in span.lower())
+            status = "supported" if hits >= 2 else "partial"
+            claims.append(Claim(concept_id=cid, status=status, evidence_span=span))
             continue
-        # 3) supported vs partial: a fuller sentence (more matching terms) reads as supported
-        hits = sum(1 for t in terms if t in span.lower())
-        status = "supported" if hits >= 2 else "partial"
-        claims.append(Claim(concept_id=cid, status=status, evidence_span=span))
+        # 3) LANGUAGE-FAIR fallback: a correct answer in plain English may use none of the curated
+        #    vocabulary. Curated cue phrases recognise that the concept was ADDRESSED. A cue match is
+        #    capped at 'partial' — it shows the student engaged the concept, NOT that it is correct
+        #    (correctness is only ever established against human labels offline; DESIGN.md section 6).
+        cue_span = _find_span_for_cues(answer, _concept_cues(cid))
+        if cue_span:
+            claims.append(Claim(concept_id=cid, status="partial", evidence_span=cue_span))
+            continue
+        # 4) nothing recognised -> genuinely absent (missing knowledge). Empty/short answers land here.
+        claims.append(Claim(concept_id=cid, status="absent", evidence_span=""))
     return TechnicalClaims(claims=claims)
 
 

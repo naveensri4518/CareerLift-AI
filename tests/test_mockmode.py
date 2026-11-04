@@ -163,3 +163,75 @@ def test_bedrock_mode_without_credentials_raises_clear_error(monkeypatch):
 def mockmodel_label():
     from agent import mockmodel
     return mockmodel.MOCK_LABEL
+
+
+# ---- language fairness: plain English must be ASSESSED, never dropped to 'Not assessed' ----
+# Regression for the production bug where a correct answer in plain English returned technical
+# "Not assessed" while communication still scored, because the mock only matched textbook vocabulary.
+
+# A genuinely correct hashing explanation that uses NONE of the curated aliases (hash map, O(1), ...).
+PLAIN_CORRECT_HASH = (
+    "When I store things by a key, looking one up is basically instant most of the time, but if lots "
+    "of them land in the same spot it slows down and has to walk through all of them."
+)
+
+
+def test_plain_english_correct_answer_is_recognised_not_absent(mock_mode):
+    """A correct plain-English answer must be at least 'partial' (addressed), never 'absent'."""
+    from agent import mockmodel
+    claims = mockmodel.extract_claims(PLAIN_CORRECT_HASH, ['C-HASH-AVG'])
+    c = claims.claims[0]
+    assert c.status == 'partial'  # cue match -> addressed, capped at partial (not inflated to supported)
+    assert c.evidence_span and c.evidence_span.lower() in PLAIN_CORRECT_HASH.lower()  # grounded real quote
+
+
+def test_plain_english_correct_answer_is_assessed_not_abstained(mock_mode):
+    """End-to-end: the technical axis must produce a band, not 'Not assessed', for plain English."""
+    from agent import app
+    out = app.run({'text': PLAIN_CORRECT_HASH, 'expected_concepts': ['C-HASH-AVG']})
+    plan = out['plan']
+    assert plan['abstained_technical'] is False       # the core fairness fix
+    assert plan['technical_band'] in ('Partial', 'Solid', 'Strong')
+
+
+def test_cue_match_is_capped_at_partial_never_supported(mock_mode):
+    """Honesty: a cue-only match shows the concept was ADDRESSED, not that it is correct.
+    It must never read as 'supported' on its own."""
+    from agent import mockmodel
+    claims = mockmodel.extract_claims(PLAIN_CORRECT_HASH, ['C-HASH-AVG'])
+    assert claims.claims[0].status != 'supported'
+
+
+def test_cues_never_override_a_grounded_wrong_assertion(mock_mode):
+    """A plain-English answer that is WRONG must still be 'incorrect', not softened to 'partial' by a cue."""
+    from agent import mockmodel
+    answer = "Hash maps are always constant time, so you never have to worry about it being slow."
+    claims = mockmodel.extract_claims(answer, ['C-HASH-AVG'])
+    assert claims.claims[0].status == 'incorrect'
+
+
+def test_empty_answer_still_abstains_after_cue_fix(mock_mode):
+    """The fix must NOT fabricate recognition for empty answers: honest abstain is preserved."""
+    from agent import app
+    out = app.run({'text': '', 'expected_concepts': ['C-HASH-AVG']})
+    assert out['plan']['abstained_technical'] is True
+    assert out['plan']['technical_band'] is None
+
+
+def test_plain_english_not_penalised_below_wrong_jargon(mock_mode):
+    """Fairness invariant: a correct plain-English answer must read at least as high as a WRONG answer
+    that happens to use the textbook vocabulary."""
+    from agent import app
+    ord_ = {None: -1, 'Weak': 0, 'Partial': 1, 'Solid': 2, 'Strong': 3}
+    plain_ok = app.run({'text': PLAIN_CORRECT_HASH, 'expected_concepts': ['C-HASH-AVG']})['plan']
+    wrong_jargon = app.run({'text': 'A hash map is always O(1), it is never O(n).',
+                            'expected_concepts': ['C-HASH-AVG']})['plan']
+    assert ord_[plain_ok['technical_band']] >= ord_[wrong_jargon['technical_band']]
+
+
+def test_every_concept_has_curated_cues():
+    """Guard: the language-fairness fix depends on each concept carrying curated plain-language cues."""
+    from agent import fairscore
+    for c in fairscore.concepts()['concepts']:
+        cues = c.get('cues', [])
+        assert isinstance(cues, list) and len(cues) >= 3, f"{c['id']} needs >=3 curated cues"

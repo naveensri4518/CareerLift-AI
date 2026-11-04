@@ -109,6 +109,40 @@ def test_single_decision_rejects_wrong_option():
     assert res["dimensions"]["data"]["score"] == 0.0
 
 
+def test_decision_never_clobbers_structural_components_dimension():
+    """Regression: a decision prompt must never overwrite the structural `components` dimension.
+
+    SD-URL-SHORTENER's `code_gen` decision used to resolve to the `components` key and silently
+    discard the real required-components match. The grade must keep BOTH: the structural components
+    score (reflecting the diagram) AND the code_gen decision score (under its own key)."""
+    s = sysdesign_bank.get_scenario("SD-URL-SHORTENER")
+    # A design with the RIGHT components/connections but a WRONG code_gen choice.
+    design = _perfect_design(s)
+    design["decisions"]["code_gen"] = {"selected": ["user_choice"]}  # not acceptable
+    res = sysdesign_eval.grade(s, design)
+    dims = res["dimensions"]
+    # structural components dimension survives and reflects the (correct) component selection
+    assert "components" in dims
+    assert dims["components"]["score"] == 1.0
+    assert "matched" in dims["components"]  # structural payload, not a decision payload
+    # the code_gen decision is scored under its OWN namespaced key, and it is wrong -> 0
+    assert "decision:code_gen" in dims
+    assert dims["decision:code_gen"]["score"] == 0.0
+    assert dims["decision:code_gen"]["base_dimension"] == "data"
+
+
+def test_two_decisions_on_same_base_dimension_are_both_scored():
+    """Regression: `datastore` and `code_gen` both map to the `data` base dimension. Both must be
+    scored independently (neither silently dropped)."""
+    s = sysdesign_bank.get_scenario("SD-URL-SHORTENER")
+    design = _perfect_design(s)
+    res = sysdesign_eval.grade(s, design)
+    data_dims = [d for d in res["dimensions"].values() if d.get("base_dimension") == "data"
+                 or res["dimensions"].get("data") is d]
+    decision_ids = {d.get("decision_id") for d in res["dimensions"].values() if "decision_id" in d}
+    assert "datastore" in decision_ids and "code_gen" in decision_ids
+
+
 def test_validate_design_rejects_unknown_ids():
     s = sysdesign_bank.get_scenario("SD-URL-SHORTENER")
     errs = sysdesign_eval.validate_design(s, {"components": ["not_a_component"],

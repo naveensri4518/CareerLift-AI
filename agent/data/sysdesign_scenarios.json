@@ -40,7 +40,7 @@
                      {"id": "kv", "text": "Key-value / NoSQL store keyed by short code"},
                      {"id": "file", "text": "Flat files on disk"},
                      {"id": "inmem_only", "text": "In-memory only, no persistence"}]},
-        {"id": "code_gen", "type": "single", "concept_id": "SD-COMPONENTS", "prompt": "How to generate unique short codes?",
+        {"id": "code_gen", "type": "single", "concept_id": "SD-DATA-STORE", "prompt": "How to generate unique short codes?",
          "options": [{"id": "counter_base62", "text": "Monotonic ID generator encoded in base62"},
                      {"id": "random_retry", "text": "Random code with collision check + retry"},
                      {"id": "user_choice", "text": "Let users type any code, first-come"},

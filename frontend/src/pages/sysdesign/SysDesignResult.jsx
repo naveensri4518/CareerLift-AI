@@ -9,10 +9,12 @@ import { dimensionLabel, gradeMeta } from '../../lib/sysdesign.js'
 function DimensionBar({ dim, d }) {
   const pct = Math.round(d.score * 100)
   const hex = pct >= 75 ? '#34d399' : pct >= 50 ? '#fbbf24' : '#f87171'
+  // Prefer the friendly base-dimension name; decision dimensions are namespaced (e.g. "decision:code_gen").
+  const label = dimensionLabel(d.base_dimension || dim)
   return (
     <div>
       <div className="flex items-center justify-between gap-3">
-        <span className="text-sm text-slate-300">{dimensionLabel(dim)}</span>
+        <span className="text-sm text-slate-300">{label}</span>
         <span className="text-xs font-semibold" style={{ color: hex }}>{pct}%</span>
       </div>
       <div className="mt-1 h-2 overflow-hidden rounded-full bg-white/5">

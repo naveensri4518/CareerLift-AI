@@ -99,34 +99,41 @@ def grade(scenario: dict, design: dict) -> dict:
     }
 
     # --- decision-driven dimensions (data, api, scalability, reliability, tradeoffs) ---
+    # `components` and `connections` are STRUCTURAL dimensions computed above and are RESERVED: a
+    # decision prompt must never overwrite them (that silently discarded the real component/connection
+    # match — e.g. SD-URL-SHORTENER's code_gen decision was mis-tagged with the components concept).
+    # Likewise two decisions that resolve to the same base dimension must each be scored, not clobber
+    # one another. So every decision gets its OWN unique key; `base_dimension` keeps the friendly name
+    # (for the label + feedback) while the key stays collision-free.
+    RESERVED = {"components", "connections"}
     for did, spec in rubric.get("decisions", {}).items():
-        dim = _dimension_for_decision(scenario, did)
+        base_dim = _dimension_for_decision(scenario, did)
+        # Never reuse a structural key, and never reuse a key already taken by another decision.
+        key = base_dim if (base_dim not in RESERVED and base_dim not in dims) else f"decision:{did}"
         chosen = set((decisions.get(did) or {}).get("selected", []) or [])
         if "acceptable" in spec:        # single-ish: any chosen that is acceptable, and only acceptable
             acceptable = set(spec["acceptable"])
             ok = bool(chosen) and chosen <= acceptable
             score = 1.0 if ok else 0.0
-            dims[dim] = {
-                "score": score, "decision_id": did,
-                "your_selected": sorted(chosen), "expected": sorted(acceptable),
-                "concept_id": rubric["concept_dimension"].get(dim),
-            }
+            expected_set = acceptable
         else:                            # multi: exact set match against expected
-            expected = set(spec.get("expected", []))
-            score = 1.0 if chosen == expected else 0.0
-            dims[dim] = {
-                "score": score, "decision_id": did,
-                "your_selected": sorted(chosen), "expected": sorted(expected),
-                "concept_id": rubric["concept_dimension"].get(dim),
-            }
+            expected_set = set(spec.get("expected", []))
+            score = 1.0 if chosen == expected_set else 0.0
+        dims[key] = {
+            "score": score, "decision_id": did,
+            "base_dimension": base_dim,     # friendly grouping/label even when key is namespaced
+            "your_selected": sorted(chosen), "expected": sorted(expected_set),
+            "concept_id": rubric["concept_dimension"].get(base_dim),
+        }
 
     # --- overall (unweighted mean across present dimensions) ---
     present = list(dims.values())
     overall = round(sum(d["score"] for d in present) / len(present) * 100, 1) if present else 0.0
 
+    # Feedback is curated per BASE dimension; attach it by base_dimension (structural dims are their own).
     feedback = scenario.get("feedback", {})
-    for dim, d in dims.items():
-        d["feedback"] = feedback.get(dim, "")
+    for key, d in dims.items():
+        d["feedback"] = feedback.get(d.get("base_dimension", key), "")
 
     # matched/missing requirement summary (functional + nonfunctional are informational; the concrete
     # matched/missing signal is the rubric's required components + connections).
@@ -136,8 +143,8 @@ def grade(scenario: dict, design: dict) -> dict:
         "dimensions": dims,
         "missing_components": missing_req,
         "missing_connections": missing_conn,
-        "strengths": sorted([dim for dim, d in dims.items() if d["score"] >= 0.75]),
-        "weaknesses": sorted([dim for dim, d in dims.items() if d["score"] < 0.5]),
+        "strengths": sorted({d.get("base_dimension", key) for key, d in dims.items() if d["score"] >= 0.75}),
+        "weaknesses": sorted({d.get("base_dimension", key) for key, d in dims.items() if d["score"] < 0.5}),
     }
 
 

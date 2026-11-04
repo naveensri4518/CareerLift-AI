@@ -24,8 +24,10 @@ export default function Planner() {
       const iv = await api.startInterview(token, { topic: data.topic })
       navigate('/app/practice', { state: { prestarted: iv } })
     } catch (err) {
-      // Fall back: just go to Practice where the user can pick the topic.
+      // Fall back WITHOUT losing the recommendation: go to Practice with the recommended topic
+      // preselected so the user still lands on the right exercise and can start it manually.
       setStartError(err.message)
+      navigate('/app/practice', { state: { topic: data.topic } })
     } finally {
       setStarting(false)
     }

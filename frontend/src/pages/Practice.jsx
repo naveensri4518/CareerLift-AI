@@ -58,8 +58,13 @@ export default function Practice() {
   const { token } = useAuth()
   const location = useLocation()
 
-  const [topic, setTopic] = useState(TOPICS[0].id)
-  const [level, setLevel] = useState(LEVELS[0].id)
+  // A topic/level may be preselected via router state (from Misconceptions "Practise X" or the
+  // Planner fallback). Validate against the known TOPICS so a stale/unknown id can't break setup.
+  const preTopic = TOPICS.some((t) => t.id === location.state?.topic) ? location.state.topic : null
+  const preLevel = LEVELS.some((l) => l.id === location.state?.level) ? location.state.level : null
+
+  const [topic, setTopic] = useState(preTopic || TOPICS[0].id)
+  const [level, setLevel] = useState(preLevel || LEVELS[0].id)
 
   const [step, setStep] = useState(STEP.SETUP)
   const [starting, setStarting] = useState(false)
@@ -70,14 +75,25 @@ export default function Practice() {
   const [answer, setAnswer] = useState('')
   const [result, setResult] = useState(null) // ScoreResponse
 
-  // If the Learning Planner pre-started an interview, jump straight into the question step.
+  // Handle hand-off from other pages via router state:
+  //  - prestarted: the Learning Planner already started an interview -> jump into the question step.
+  //  - topic (no prestarted): Misconceptions / Planner-fallback asked to practise a specific topic ->
+  //    preselect it on the setup screen so the user lands on the RIGHT topic (not the default).
   useEffect(() => {
     const pre = location.state?.prestarted
     if (pre && !interview) {
       setInterview(pre)
       setStep(STEP.QUESTION)
-      // clear router state so a refresh doesn't re-trigger
-      window.history.replaceState({}, '')
+      window.history.replaceState({}, '') // clear so a refresh doesn't re-trigger
+      return
+    }
+    const wantedTopic = location.state?.topic
+    if (wantedTopic && TOPICS.some((t) => t.id === wantedTopic)) {
+      setTopic(wantedTopic)
+      const wantedLevel = location.state?.level
+      if (wantedLevel && LEVELS.some((l) => l.id === wantedLevel)) setLevel(wantedLevel)
+      setStep(STEP.SETUP)
+      window.history.replaceState({}, '') // consume the state; refresh keeps the selection, not a re-nav
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state])

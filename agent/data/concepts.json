@@ -1,6 +1,7 @@
 {
   "version": "2026-10-31",
   "note": "Curated concept reference for CareerLift AI. The Verifier checks that every extracted claim's concept_id exists here and is in the question's expected_concepts. key_points are for human review and future entailment checks; they are NOT used to prove correctness in the deterministic core (see DESIGN.md section 6). Every source has a title, publisher, URL and the date it was read.",
+  "note_cues": "'cues' are curated PLAIN-LANGUAGE phrases that indicate a student has ADDRESSED this concept even without textbook vocabulary (language fairness, DESIGN.md sections 2 & 7). A cue match means the concept was touched, NOT that the answer is correct: a cue-only match (no key_point vocabulary overlap) can never read above 'partial'. Cues NEVER raise a read to 'supported' and NEVER override a grounded wrong assertion. Human-curated from the same source as the concept.",
   "sources": {
     "CLRS4": "Cormen, Leiserson, Rivest, Stein — Introduction to Algorithms, 4th ed., MIT Press (concept definitions cross-checked). Read 2026-10-31.",
     "PYDOCS": "Python Language Reference & Library docs, python.org. https://docs.python.org/3/ Read 2026-10-31.",
@@ -12,56 +13,64 @@
       "source": "CLRS4",
       "canonical_name": "Big-O notation (asymptotic upper bound)",
       "key_points": ["describes growth of running time or space as input size grows", "an upper bound, ignores constant factors and lower-order terms"],
-      "aliases": ["big o", "time complexity", "asymptotic", "order of growth", "complexity"]
+      "aliases": ["big o", "time complexity", "asymptotic", "order of growth", "complexity"],
+      "cues": ["how the time grows", "how long it takes as it gets bigger", "scales with the size", "grows as the input", "how fast it slows down", "amount of work grows", "ignores constants"]
     },
     {
       "id": "C-BIGO-WORSTCASE",
       "source": "CLRS4",
       "canonical_name": "Worst-case vs average-case",
       "key_points": ["worst case is the maximum over all inputs of size n", "average and worst case can differ (e.g. quicksort)"],
-      "aliases": ["worst case", "average case", "best case"]
+      "aliases": ["worst case", "average case", "best case"],
+      "cues": ["most of the time", "usually fast but sometimes", "in the bad case", "when things go wrong", "on a typical input", "depends on the input", "in the worst situation"]
     },
     {
       "id": "C-BINSEARCH",
       "source": "CLRS4",
       "canonical_name": "Binary search requires a sorted array and runs in O(log n)",
       "key_points": ["array must be sorted", "halves the search range each step", "O(log n) comparisons"],
-      "aliases": ["binary search", "log n search", "halving"]
+      "aliases": ["binary search", "log n search", "halving"],
+      "cues": ["has to be in order", "must be ordered", "already sorted", "cut it in half", "cuts the list in half", "throw away half", "split in half each time", "narrow it down by half"]
     },
     {
       "id": "C-HASH-AVG",
       "source": "CLRS4",
       "canonical_name": "Hash table average-case O(1) lookup, worst-case O(n)",
       "key_points": ["average O(1) with a good hash and load factor", "worst case O(n) under heavy collisions"],
-      "aliases": ["hash map", "hash table", "dictionary lookup", "o(1)"]
+      "aliases": ["hash map", "hash table", "dictionary lookup", "o(1)"],
+      "cues": ["store things by a key", "look one up by key", "basically instant", "constant time", "go straight to it", "land in the same spot", "same bucket", "clash", "collide", "walk through all of them"]
     },
     {
       "id": "C-RECURSION-BASE",
       "source": "CLRS4",
       "canonical_name": "Recursion needs a base case",
       "key_points": ["a base case stops the recursion", "missing/incorrect base case causes infinite recursion / stack overflow"],
-      "aliases": ["recursion", "base case", "recursive call", "stack overflow"]
+      "aliases": ["recursion", "base case", "recursive call", "stack overflow"],
+      "cues": ["calls itself", "a stopping point", "a condition to stop", "when to stop", "never stops", "keeps going forever", "runs out of memory", "a way out"]
     },
     {
       "id": "C-SQL-JOIN",
       "source": "PG16",
       "canonical_name": "INNER JOIN vs LEFT JOIN",
       "key_points": ["INNER JOIN keeps only matching rows", "LEFT JOIN keeps all left rows, NULLs where no match"],
-      "aliases": ["inner join", "left join", "outer join", "join"]
+      "aliases": ["inner join", "left join", "outer join", "join"],
+      "cues": ["combine two tables", "match rows", "only matching rows", "keep all the rows on the left", "keep everything from the first table", "fills in blanks", "nulls where there is no match", "rows with no match"]
     },
     {
       "id": "C-SQL-INDEX",
       "source": "PG16",
       "canonical_name": "Indexes speed up lookups but cost on writes",
       "key_points": ["an index speeds up matching reads", "indexes add overhead to inserts/updates and use space"],
-      "aliases": ["index", "indexing", "b-tree index"]
+      "aliases": ["index", "indexing", "b-tree index"],
+      "cues": ["makes reads faster", "speeds up searching", "find rows quicker", "slower to write", "costs on inserts", "takes extra space", "like an index in a book", "trade-off"]
     },
     {
       "id": "C-PY-MUTABLE-DEFAULT",
       "source": "PYDOCS",
       "canonical_name": "Mutable default argument pitfall",
       "key_points": ["default values are evaluated once at definition time", "a mutable default (e.g. []) is shared across calls"],
-      "aliases": ["mutable default", "default argument", "shared list default"]
+      "aliases": ["mutable default", "default argument", "shared list default"],
+      "cues": ["shared between calls", "shared across calls", "same list every time", "remembers between calls", "created once", "evaluated once", "reuses the same object", "carries over"]
     }
   ],
   "note_exclusion_pairs": "Only list pairs of concepts that are genuinely mutually exclusive as STATEMENTS about the same thing (e.g. a claim that something is both O(1) and O(n) for the identical operation). Different algorithms (hash lookup vs binary search) are NOT contradictory and must never be listed here.",
