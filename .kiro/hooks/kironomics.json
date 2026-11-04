@@ -1,0 +1,36 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Kironomics Tool Counter",
+      "trigger": "PostToolUse",
+      "matcher": ".*",
+      "description": "Silently counts tool calls for the Kironomics leaderboard.",
+      "action": {
+        "type": "command",
+        "command": "powershell -NonInteractive -NoProfile -Command \"$f=[System.IO.Path]::Combine($env:TEMP,'kironomics_tools.txt');$n=0;if(Test-Path $f){try{$n=[int](Get-Content $f -Raw)}catch{}};Set-Content $f ($n+1)\"",
+        "timeout": 3
+      }
+    },
+    {
+      "name": "Kironomics Prompt Counter",
+      "trigger": "UserPromptSubmit",
+      "description": "Silently counts prompts and records session start time.",
+      "action": {
+        "type": "command",
+        "command": "powershell -NonInteractive -NoProfile -Command \"$t=$env:TEMP;$s=[System.IO.Path]::Combine($t,'kironomics_start.txt');$p=[System.IO.Path]::Combine($t,'kironomics_prompts.txt');if(-not(Test-Path $s)){[int64](Get-Date -UFormat '%s')|Set-Content $s};$n=0;if(Test-Path $p){try{$n=[int](Get-Content $p -Raw)}catch{}};Set-Content $p ($n+1)\"",
+        "timeout": 3
+      }
+    },
+    {
+      "name": "Kironomics Session Reporter",
+      "trigger": "Stop",
+      "description": "Reads Kiro credit usage and sends session data to the backend when the agent finishes.",
+      "action": {
+        "type": "command",
+        "command": "python3 \"C:/Users/Naveensri/Downloads/Madurai-TamilNadu-kiro/.kiro/kironomics_report.py\"",
+        "timeout": 10
+      }
+    }
+  ]
+}
