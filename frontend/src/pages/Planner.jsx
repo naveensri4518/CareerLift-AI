@@ -22,12 +22,22 @@ export default function Planner() {
     try {
       // Begin an interview on the recommended topic, then hand off to Practice via router state.
       const iv = await api.startInterview(token, { topic: data.topic })
-      navigate('/app/practice', { state: { prestarted: iv } })
+      navigate('/app/practice', {
+        state: {
+          prestarted: iv,
+          context: { type: 'planner', topic: data.topic, reason: data.reason },
+        },
+      })
     } catch (err) {
       // Fall back WITHOUT losing the recommendation: go to Practice with the recommended topic
       // preselected so the user still lands on the right exercise and can start it manually.
       setStartError(err.message)
-      navigate('/app/practice', { state: { topic: data.topic } })
+      navigate('/app/practice', {
+        state: {
+          topic: data.topic,
+          context: { type: 'planner', topic: data.topic, reason: data.reason },
+        },
+      })
     } finally {
       setStarting(false)
     }

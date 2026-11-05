@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import {
+  ArrowLeft,
   ArrowRight,
   Code2,
   Info,
@@ -11,6 +12,7 @@ import {
   RotateCcw,
   Send,
   ShieldAlert,
+  Target,
 } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { Badge, Card, ErrorState, SectionHeading, Spinner } from '../components/ui.jsx'
@@ -45,7 +47,7 @@ function ScorePanel({ icon: Icon, tint, title, band, abstained, evidence }) {
           {evidence.map((e, i) => (
             <div key={i} className="flex items-start gap-2 rounded-lg border border-white/5 bg-ink-900/60 p-2.5 text-xs text-slate-300">
               <Quote size={13} className="mt-0.5 shrink-0 text-slate-500" />
-              <span className="italic">“{e}”</span>
+              <span className="italic">"{e}"</span>
             </div>
           ))}
         </div>
@@ -58,48 +60,53 @@ export default function Practice() {
   const { token } = useAuth()
   const location = useLocation()
 
-  // A topic/level may be preselected via router state (from Misconceptions "Practise X" or the
-  // Planner fallback). Validate against the known TOPICS so a stale/unknown id can't break setup.
-  const preTopic = TOPICS.some((t) => t.id === location.state?.topic) ? location.state.topic : null
-  const preLevel = LEVELS.some((l) => l.id === location.state?.level) ? location.state.level : null
+  // Capture router-state context once on mount. Never re-read after consumed.
+  // context shapes:
+  //   { type: 'misconception', title, explain, topic } — from Misconceptions page
+  //   { type: 'planner', topic, reason }               — from Learning Planner
+  // No context = direct Quick Practice (show the topic/level selector).
+  const [practiceContext, setPracticeContext] = useState(null)
 
-  const [topic, setTopic] = useState(preTopic || TOPICS[0].id)
-  const [level, setLevel] = useState(preLevel || LEVELS[0].id)
-
+  const [topic, setTopic] = useState(TOPICS[0].id)
+  const [level, setLevel] = useState(LEVELS[0].id)
   const [step, setStep] = useState(STEP.SETUP)
   const [starting, setStarting] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState(null)
-
-  const [interview, setInterview] = useState(null) // { interview_id, question, topic, difficulty }
+  const [interview, setInterview] = useState(null)
   const [answer, setAnswer] = useState('')
-  const [result, setResult] = useState(null) // ScoreResponse
+  const [result, setResult] = useState(null)
 
-  // Handle hand-off from other pages via router state:
-  //  - prestarted: the Learning Planner already started an interview -> jump into the question step.
-  //  - topic (no prestarted): Misconceptions / Planner asked to practise a specific topic ->
-  //    auto-start an interview on that topic so the user lands directly on the question, not a
-  //    setup screen. The user already chose the topic by clicking "Practise X" — don't make them
-  //    click "Start interview" again on a generic-looking page.
+  // Guard against running the mount effect twice in React StrictMode dev builds.
+  const stateConsumed = useRef(false)
+
   useEffect(() => {
+    // location.state is synchronously available at mount — read it once and consume.
     const state = location.state
-    if (!state) return
-    window.history.replaceState({}, '') // consume immediately so refresh never re-triggers
+    if (!state || stateConsumed.current) return
+    stateConsumed.current = true
+    // Consume the router state immediately so refresh never re-triggers this effect.
+    window.history.replaceState({}, '')
 
-    const pre = state.prestarted
-    if (pre && !interview) {
-      setInterview(pre)
+    // Save the incoming context for display in banners and page heading.
+    if (state.context) setPracticeContext(state.context)
+
+    // Case 1: Learning Planner already started an interview and passed it in directly.
+    if (state.prestarted) {
+      setInterview(state.prestarted)
       setStep(STEP.QUESTION)
       return
     }
 
+    // Case 2: Misconceptions or Planner fallback passed a topic to practise.
+    // Auto-start the interview immediately — the user already chose a topic by clicking an action;
+    // don't force them through a generic setup screen again.
     const wantedTopic = state.topic
-    if (wantedTopic && TOPICS.some((t) => t.id === wantedTopic) && !interview) {
+    if (wantedTopic && TOPICS.some((t) => t.id === wantedTopic)) {
       const wantedLevel = state.level
       const lvl = LEVELS.some((l) => l.id === wantedLevel) ? wantedLevel : LEVELS[0].id
       setTopic(wantedTopic)
       setLevel(lvl)
-      // Auto-start: launch the interview immediately without showing the setup screen.
       setStarting(true)
       setError(null)
       api.startInterview(token, { topic: wantedTopic, level: lvl })
@@ -110,14 +117,14 @@ export default function Practice() {
           setStep(STEP.QUESTION)
         })
         .catch((err) => {
-          // If auto-start fails, fall back to setup screen with topic preselected.
+          // Auto-start failed: fall back to the setup screen with topic preselected.
           setError(err.message)
           setStep(STEP.SETUP)
         })
         .finally(() => setStarting(false))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.state])
+  }, []) // Intentionally run once on mount — location.state is available synchronously.
 
   const startInterview = async () => {
     setStarting(true)
@@ -160,78 +167,156 @@ export default function Practice() {
     setAnswer('')
     setResult(null)
     setError(null)
+    // Clearing context on reset so the user is now in free-choice mode.
+    setPracticeContext(null)
+    stateConsumed.current = false
   }
 
   const fullAbstain = result && result.abstained_technical && result.abstained_communication
+  const isMisconception = practiceContext?.type === 'misconception'
+  const isPlanner      = practiceContext?.type === 'planner'
+  const hasContext     = isMisconception || isPlanner
+
+  // Page heading and subtitle differ per entry point to make each flow visually distinct.
+  const pageTitle = isMisconception
+    ? 'Misconception Practice'
+    : isPlanner
+      ? 'Recommended Exercise'
+      : 'Practice Interview'
+
+  const pageSubtitle = isMisconception
+    ? 'Targeted practice to correct a specific gap in your answers.'
+    : isPlanner
+      ? 'Your personalised next exercise, based on your learning history.'
+      : 'Answer in your own words. Your technical understanding and your communication are scored separately — plain English never lowers your technical result.'
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
+
+      {/* Back link — only shown when arriving from a contextual flow */}
+      {hasContext && (
+        <Link
+          to={isMisconception ? '/app/misconceptions' : '/app/planner'}
+          className="flex w-fit items-center gap-1.5 text-xs text-slate-400 transition-colors hover:text-slate-200"
+        >
+          <ArrowLeft size={13} />
+          {isMisconception ? 'Back to Misconceptions' : 'Back to Learning Planner'}
+        </Link>
+      )}
+
+      {/* Page heading */}
       <div>
-        <h1 className="text-2xl font-extrabold text-white">Practice Interview</h1>
-        <p className="mt-1 text-sm text-slate-400">
-          Answer in your own words. Your technical understanding and your communication are scored
-          separately — plain English never lowers your technical result.
-        </p>
+        <h1 className="text-2xl font-extrabold text-white">{pageTitle}</h1>
+        <p className="mt-1 text-sm text-slate-400">{pageSubtitle}</p>
       </div>
 
-      {/* Step 1: setup — shown when manually starting OR briefly during auto-start from topic handoff */}
+      {/* Context banner — visible throughout all steps for contextual flows */}
+      {isMisconception && (
+        <div className="flex items-start gap-3 rounded-2xl border border-warn/30 bg-warn/5 px-4 py-3">
+          <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-warn/15 text-warn">
+            <Target size={14} />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-warn">
+              Fixing misconception: {practiceContext.title}
+            </p>
+            <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
+              {practiceContext.explain}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {isPlanner && (
+        <div className="flex items-start gap-3 rounded-2xl border border-brand-purple/30 bg-brand-soft px-4 py-3">
+          <span className="mt-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-brand-violet/20 text-brand-violet">
+            <Lightbulb size={14} />
+          </span>
+          <div>
+            <p className="text-sm font-semibold text-slate-200">
+              Recommended: {topicLabel(practiceContext.topic)}
+            </p>
+            {practiceContext.reason ? (
+              <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
+                {practiceContext.reason}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      )}
+
+      {/* ── Step 1: setup ──────────────────────────────────────── */}
       {step === STEP.SETUP && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="p-6">
             {starting ? (
-              <div className="flex items-center justify-center min-h-[120px]">
+              <div className="flex min-h-[120px] items-center justify-center">
                 <Spinner label="Starting your interview…" />
               </div>
             ) : (
               <>
-                <SectionHeading icon={Mic} title="Set up your interview" />
+                <SectionHeading
+                  icon={Mic}
+                  title={hasContext ? 'Ready to start' : 'Set up your interview'}
+                />
                 <div className="mt-5 space-y-5">
-                  <div>
-                    <label className="mb-2 block text-xs font-medium text-slate-400">Topic</label>
-                    <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-                      {TOPICS.map((t) => (
-                        <button
-                          key={t.id}
-                          onClick={() => setTopic(t.id)}
-                          className={`rounded-xl border p-3 text-left transition-all ${
-                            topic === t.id
-                              ? 'border-brand-purple/50 bg-brand-soft'
-                              : 'border-white/5 bg-ink-900/60 hover:border-white/10'
-                          }`}
-                        >
-                          <p className="text-sm font-semibold text-slate-100">{t.label}</p>
-                          <p className="mt-0.5 text-xs text-slate-500">{t.blurb}</p>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
 
-                  <div>
-                    <label className="mb-2 block text-xs font-medium text-slate-400">Difficulty</label>
-                    <div className="flex flex-wrap gap-2">
-                      {LEVELS.map((l) => (
-                        <button
-                          key={l.id}
-                          onClick={() => setLevel(l.id)}
-                          className={`rounded-xl border px-4 py-2 text-sm transition-all ${
-                            level === l.id
-                              ? 'border-brand-purple/50 bg-brand-soft text-white'
-                              : 'border-white/5 bg-ink-900/60 text-slate-300 hover:border-white/10'
-                          }`}
-                        >
-                          {l.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+                  {/* Topic + level selectors are only shown for direct Quick Practice.
+                      Contextual flows (Misconceptions, Planner) already have a topic. */}
+                  {!hasContext && (
+                    <>
+                      <div>
+                        <label className="mb-2 block text-xs font-medium text-slate-400">Topic</label>
+                        <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                          {TOPICS.map((t) => (
+                            <button
+                              key={t.id}
+                              onClick={() => setTopic(t.id)}
+                              className={`rounded-xl border p-3 text-left transition-all ${
+                                topic === t.id
+                                  ? 'border-brand-purple/50 bg-brand-soft'
+                                  : 'border-white/5 bg-ink-900/60 hover:border-white/10'
+                              }`}
+                            >
+                              <p className="text-sm font-semibold text-slate-100">{t.label}</p>
+                              <p className="mt-0.5 text-xs text-slate-500">{t.blurb}</p>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="mb-2 block text-xs font-medium text-slate-400">Difficulty</label>
+                        <div className="flex flex-wrap gap-2">
+                          {LEVELS.map((l) => (
+                            <button
+                              key={l.id}
+                              onClick={() => setLevel(l.id)}
+                              className={`rounded-xl border px-4 py-2 text-sm transition-all ${
+                                level === l.id
+                                  ? 'border-brand-purple/50 bg-brand-soft text-white'
+                                  : 'border-white/5 bg-ink-900/60 text-slate-300 hover:border-white/10'
+                              }`}
+                            >
+                              {l.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
 
                   {error ? <ErrorState message={error} onRetry={startInterview} /> : null}
 
-                  <button className="btn-primary !py-3" onClick={startInterview} disabled={starting}>
-                    {starting ? <Spinner label="Preparing your question…" /> : (
-                      <>
-                        Start interview <ArrowRight size={16} />
-                      </>
+                  <button
+                    className="btn-primary !py-3"
+                    onClick={startInterview}
+                    disabled={starting}
+                  >
+                    {starting ? (
+                      <Spinner label="Preparing your question…" />
+                    ) : (
+                      <>Start interview <ArrowRight size={16} /></>
                     )}
                   </button>
                 </div>
@@ -241,15 +326,21 @@ export default function Practice() {
         </motion.div>
       )}
 
-      {/* Step 2: question + answer */}
+      {/* ── Step 2: question + answer ───────────────────────────── */}
       {step === STEP.QUESTION && interview && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-5"
+        >
           <Card glow className="p-6">
             <div className="flex items-center gap-2">
               <Badge tone="muted">{topicLabel(interview.topic)}</Badge>
               <Badge tone="muted">{interview.difficulty}</Badge>
             </div>
-            <p className="mt-4 text-lg font-semibold leading-relaxed text-white">{interview.question}</p>
+            <p className="mt-4 text-lg font-semibold leading-relaxed text-white">
+              {interview.question}
+            </p>
           </Card>
 
           <Card className="p-6">
@@ -267,7 +358,7 @@ export default function Practice() {
             />
             <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
               <span className="flex items-center gap-1.5">
-                <Info size={13} /> Don’t include personal details (phone, email, id numbers).
+                <Info size={13} /> Don't include personal details (phone, email, id numbers).
               </span>
               <span>{answer.length}/8000</span>
             </div>
@@ -275,11 +366,15 @@ export default function Practice() {
             {error ? <div className="mt-4"><ErrorState message={error} /></div> : null}
 
             <div className="mt-4 flex flex-wrap gap-3">
-              <button className="btn-primary !py-3" onClick={submitAnswer} disabled={submitting || !answer.trim()}>
-                {submitting ? <Spinner label="Evaluating your answer…" /> : (
-                  <>
-                    Submit for scoring <Send size={15} />
-                  </>
+              <button
+                className="btn-primary !py-3"
+                onClick={submitAnswer}
+                disabled={submitting || !answer.trim()}
+              >
+                {submitting ? (
+                  <Spinner label="Evaluating your answer…" />
+                ) : (
+                  <>Submit for scoring <Send size={15} /></>
                 )}
               </button>
               <button className="btn-ghost !py-3" onClick={reset} disabled={submitting}>
@@ -290,15 +385,20 @@ export default function Practice() {
         </motion.div>
       )}
 
-      {/* Step 3: result */}
+      {/* ── Step 3: result ──────────────────────────────────────── */}
       {step === STEP.RESULT && result && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-5"
+        >
           {result.mock ? (
             <div className="flex items-center gap-2 rounded-xl border border-brand-purple/30 bg-brand-soft px-4 py-2.5 text-xs font-medium text-brand-violet">
               <Info size={14} />
               Local demo mode — this result is from a deterministic offline evaluator, not a live AI model.
             </div>
           ) : null}
+
           {fullAbstain ? (
             <Card className="border-warn/25 bg-warn/5 p-6">
               <div className="flex items-start gap-3">
@@ -306,10 +406,12 @@ export default function Practice() {
                   <ShieldAlert size={18} />
                 </span>
                 <div>
-                  <h3 className="text-sm font-bold text-warn">We couldn’t confidently score this answer</h3>
+                  <h3 className="text-sm font-bold text-warn">
+                    We couldn't confidently score this answer
+                  </h3>
                   <p className="mt-1 text-sm leading-relaxed text-slate-300">
                     {result.message ||
-                      'There wasn’t enough in the answer to assess it fairly. This is not a low score — it just means we won’t guess. Try explaining the core idea again in your own words.'}
+                      "There wasn't enough in the answer to assess it fairly. This is not a low score — it just means we won't guess. Try explaining the core idea again in your own words."}
                   </p>
                 </div>
               </div>
@@ -348,9 +450,19 @@ export default function Practice() {
             <button className="btn-primary !py-3" onClick={reset}>
               <RotateCcw size={15} /> Practise another
             </button>
-            <Link to="/app/progress" className="btn-ghost !py-3">
-              See my progress <ArrowRight size={15} />
-            </Link>
+            {hasContext ? (
+              <Link
+                to={isMisconception ? '/app/misconceptions' : '/app/planner'}
+                className="btn-ghost !py-3"
+              >
+                <ArrowLeft size={15} />
+                {isMisconception ? 'Back to Misconceptions' : 'Back to Planner'}
+              </Link>
+            ) : (
+              <Link to="/app/progress" className="btn-ghost !py-3">
+                See my progress <ArrowRight size={15} />
+              </Link>
+            )}
           </div>
         </motion.div>
       )}
