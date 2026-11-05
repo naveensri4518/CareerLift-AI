@@ -77,23 +77,44 @@ export default function Practice() {
 
   // Handle hand-off from other pages via router state:
   //  - prestarted: the Learning Planner already started an interview -> jump into the question step.
-  //  - topic (no prestarted): Misconceptions / Planner-fallback asked to practise a specific topic ->
-  //    preselect it on the setup screen so the user lands on the RIGHT topic (not the default).
+  //  - topic (no prestarted): Misconceptions / Planner asked to practise a specific topic ->
+  //    auto-start an interview on that topic so the user lands directly on the question, not a
+  //    setup screen. The user already chose the topic by clicking "Practise X" — don't make them
+  //    click "Start interview" again on a generic-looking page.
   useEffect(() => {
-    const pre = location.state?.prestarted
+    const state = location.state
+    if (!state) return
+    window.history.replaceState({}, '') // consume immediately so refresh never re-triggers
+
+    const pre = state.prestarted
     if (pre && !interview) {
       setInterview(pre)
       setStep(STEP.QUESTION)
-      window.history.replaceState({}, '') // clear so a refresh doesn't re-trigger
       return
     }
-    const wantedTopic = location.state?.topic
-    if (wantedTopic && TOPICS.some((t) => t.id === wantedTopic)) {
+
+    const wantedTopic = state.topic
+    if (wantedTopic && TOPICS.some((t) => t.id === wantedTopic) && !interview) {
+      const wantedLevel = state.level
+      const lvl = LEVELS.some((l) => l.id === wantedLevel) ? wantedLevel : LEVELS[0].id
       setTopic(wantedTopic)
-      const wantedLevel = location.state?.level
-      if (wantedLevel && LEVELS.some((l) => l.id === wantedLevel)) setLevel(wantedLevel)
-      setStep(STEP.SETUP)
-      window.history.replaceState({}, '') // consume the state; refresh keeps the selection, not a re-nav
+      setLevel(lvl)
+      // Auto-start: launch the interview immediately without showing the setup screen.
+      setStarting(true)
+      setError(null)
+      api.startInterview(token, { topic: wantedTopic, level: lvl })
+        .then((iv) => {
+          setInterview(iv)
+          setAnswer('')
+          setResult(null)
+          setStep(STEP.QUESTION)
+        })
+        .catch((err) => {
+          // If auto-start fails, fall back to setup screen with topic preselected.
+          setError(err.message)
+          setStep(STEP.SETUP)
+        })
+        .finally(() => setStarting(false))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.state])
@@ -153,61 +174,69 @@ export default function Practice() {
         </p>
       </div>
 
-      {/* Step 1: setup */}
+      {/* Step 1: setup — shown when manually starting OR briefly during auto-start from topic handoff */}
       {step === STEP.SETUP && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="p-6">
-            <SectionHeading icon={Mic} title="Set up your interview" />
-            <div className="mt-5 space-y-5">
-              <div>
-                <label className="mb-2 block text-xs font-medium text-slate-400">Topic</label>
-                <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
-                  {TOPICS.map((t) => (
-                    <button
-                      key={t.id}
-                      onClick={() => setTopic(t.id)}
-                      className={`rounded-xl border p-3 text-left transition-all ${
-                        topic === t.id
-                          ? 'border-brand-purple/50 bg-brand-soft'
-                          : 'border-white/5 bg-ink-900/60 hover:border-white/10'
-                      }`}
-                    >
-                      <p className="text-sm font-semibold text-slate-100">{t.label}</p>
-                      <p className="mt-0.5 text-xs text-slate-500">{t.blurb}</p>
-                    </button>
-                  ))}
-                </div>
+            {starting ? (
+              <div className="flex items-center justify-center min-h-[120px]">
+                <Spinner label="Starting your interview…" />
               </div>
+            ) : (
+              <>
+                <SectionHeading icon={Mic} title="Set up your interview" />
+                <div className="mt-5 space-y-5">
+                  <div>
+                    <label className="mb-2 block text-xs font-medium text-slate-400">Topic</label>
+                    <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+                      {TOPICS.map((t) => (
+                        <button
+                          key={t.id}
+                          onClick={() => setTopic(t.id)}
+                          className={`rounded-xl border p-3 text-left transition-all ${
+                            topic === t.id
+                              ? 'border-brand-purple/50 bg-brand-soft'
+                              : 'border-white/5 bg-ink-900/60 hover:border-white/10'
+                          }`}
+                        >
+                          <p className="text-sm font-semibold text-slate-100">{t.label}</p>
+                          <p className="mt-0.5 text-xs text-slate-500">{t.blurb}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-              <div>
-                <label className="mb-2 block text-xs font-medium text-slate-400">Difficulty</label>
-                <div className="flex flex-wrap gap-2">
-                  {LEVELS.map((l) => (
-                    <button
-                      key={l.id}
-                      onClick={() => setLevel(l.id)}
-                      className={`rounded-xl border px-4 py-2 text-sm transition-all ${
-                        level === l.id
-                          ? 'border-brand-purple/50 bg-brand-soft text-white'
-                          : 'border-white/5 bg-ink-900/60 text-slate-300 hover:border-white/10'
-                      }`}
-                    >
-                      {l.label}
-                    </button>
-                  ))}
+                  <div>
+                    <label className="mb-2 block text-xs font-medium text-slate-400">Difficulty</label>
+                    <div className="flex flex-wrap gap-2">
+                      {LEVELS.map((l) => (
+                        <button
+                          key={l.id}
+                          onClick={() => setLevel(l.id)}
+                          className={`rounded-xl border px-4 py-2 text-sm transition-all ${
+                            level === l.id
+                              ? 'border-brand-purple/50 bg-brand-soft text-white'
+                              : 'border-white/5 bg-ink-900/60 text-slate-300 hover:border-white/10'
+                          }`}
+                        >
+                          {l.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {error ? <ErrorState message={error} onRetry={startInterview} /> : null}
+
+                  <button className="btn-primary !py-3" onClick={startInterview} disabled={starting}>
+                    {starting ? <Spinner label="Preparing your question…" /> : (
+                      <>
+                        Start interview <ArrowRight size={16} />
+                      </>
+                    )}
+                  </button>
                 </div>
-              </div>
-
-              {error ? <ErrorState message={error} onRetry={startInterview} /> : null}
-
-              <button className="btn-primary !py-3" onClick={startInterview} disabled={starting}>
-                {starting ? <Spinner label="Preparing your question…" /> : (
-                  <>
-                    Start interview <ArrowRight size={16} />
-                  </>
-                )}
-              </button>
-            </div>
+              </>
+            )}
           </Card>
         </motion.div>
       )}
